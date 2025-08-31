@@ -8,7 +8,7 @@ pygame.init()
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Galaga-style Game")
+pygame.display.set_caption("Starfighter")
 
 # Colors
 BLACK = (0, 0, 0)
@@ -92,6 +92,23 @@ async def main():
                     bullets.remove(bullet)
                     enemies.remove(enemy)
                     break
+
+        # Check for collisions between enemies and player
+        for enemy in enemies:
+            if enemy.colliderect(pygame.Rect(player_x, player_y, player_width, player_height)):
+            # Flash game over screen
+                for _ in range(3):  # Flash 3 times
+                    screen.fill(RED)
+                    pygame.display.flip()
+                    await asyncio.sleep(0.5)
+                    screen.fill(BLACK)
+                    pygame.display.flip()
+                    await asyncio.sleep(0.5)
+            # Restart the game
+                enemies.clear()
+                bullets.clear()
+                player_x = WIDTH // 2 - player_width // 2
+                player_y = HEIGHT - player_height - 10
 
         draw_player()
         draw_enemies()
