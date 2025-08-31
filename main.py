@@ -34,6 +34,15 @@ bullet_height = 10
 bullets = []
 bullet_speed = 7
 
+# Power-up settings
+powerup_radius = 20
+powerup_speed = 2
+powerups = []
+powerup_active = False
+powerup_duration = 5000  # milliseconds
+powerup_start_time = 0
+
+
 # Game loop control
 clock = pygame.time.Clock()
 
@@ -61,6 +70,22 @@ def draw_bullets():
         pygame.draw.rect(screen, WHITE, bullet)
 
 
+def spawn_powerup():
+    x = random.randint(powerup_radius, WIDTH - powerup_radius)
+    new_powerup = pygame.Rect(x, 0, powerup_radius * 2, powerup_radius * 2)
+    powerups.append(new_powerup)
+
+
+def draw_powerups():
+    for powerup in powerups:
+        pygame.draw.circle(
+            screen,
+            (255, 255, 0),
+            (powerup.x + powerup_radius, powerup.y + powerup_radius),
+            powerup_radius,
+        )
+
+
 async def main():
     global player_x, player_y
     score = 0
@@ -68,7 +93,9 @@ async def main():
     player_speed = 5
     last_space_time = 0
     last_bullet_time = 0
+    bullet_interval = 1000  # milliseconds
     refractory_period = 300  # milliseconds
+    powerup_active = False
 
     while running:
         screen.fill(BLACK)
@@ -120,6 +147,41 @@ async def main():
             if bullet.y < 0:
                 bullets.remove(bullet)
 
+        # Update power-ups
+        if random.randint(1, 300) == 1:  # Spawn a power-up randomly
+            spawn_powerup()
+        for powerup in powerups[:]:
+            powerup.y += powerup_speed
+            if powerup.y > HEIGHT:
+                powerups.remove(powerup)
+
+        # Check for collisions between player and power-ups
+        player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
+        for powerup in powerups[:]:
+            if player_rect.colliderect(powerup):
+                powerups.remove(powerup)
+                powerup_active = True
+                powerup_start_time = current_time
+
+        # Handle power-up effect duration
+        if powerup_active:
+            bullet_interval = 500  # Fire bullets every 0.5 seconds
+            if current_time - powerup_start_time > powerup_duration:
+                powerup_active = False
+                bullet_interval = 1000  # Reset to normal firing rate
+        else:
+            bullet_interval = 1000  # Normal firing rate
+
+        # Fire a bullet based on current bullet_interval
+        if current_time - last_bullet_time > bullet_interval:
+            bullet = pygame.Rect(
+                player_x + player_width // 2 - bullet_width // 2,
+                player_y,
+                bullet_width,
+                bullet_height,
+            )
+            bullets.append(bullet)
+            last_bullet_time = current_time
         # Collision detection
 
         for bullet in bullets:
@@ -158,6 +220,7 @@ async def main():
         draw_player()
         draw_enemies()
         draw_bullets()
+        draw_powerups()
 
         pygame.display.flip()
         clock.tick(60)
