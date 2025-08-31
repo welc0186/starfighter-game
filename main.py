@@ -54,6 +54,7 @@ def draw_bullets():
 
 async def main():
     global player_x, player_y
+    score = 0
     running = True
     while running:
         screen.fill(BLACK)
@@ -86,12 +87,19 @@ async def main():
                 bullets.remove(bullet)
 
         # Collision detection
+
         for bullet in bullets:
             for enemy in enemies:
                 if bullet.colliderect(enemy):
                     bullets.remove(bullet)
                     enemies.remove(enemy)
+                    score += 1  # Increment score
                     break
+
+        # Display score
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f'Score: {score}', True, WHITE)
+        screen.blit(score_text, (10, 10))  # Draw score at the top-left corner
 
         # Check for collisions between enemies and player
         for enemy in enemies:
