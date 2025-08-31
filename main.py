@@ -1,3 +1,4 @@
+import asyncio
 import pygame
 import random
 
@@ -34,7 +35,6 @@ bullets = []
 bullet_speed = 7
 
 # Game loop control
-running = True
 clock = pygame.time.Clock()
 
 def spawn_enemy():
@@ -52,49 +52,53 @@ def draw_bullets():
     for bullet in bullets:
         pygame.draw.rect(screen, WHITE, bullet)
 
-while running:
-    screen.fill(BLACK)
+async def main():
+    global player_x, player_y
+    running = True
+    while running:
+        screen.fill(BLACK)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and player_x > 0:
-        player_x -= player_speed
-    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_width:
-        player_x += player_speed
-    if keys[pygame.K_SPACE]:
-        if len(bullets) < 5:  # Limit the number of bullets
-            bullets.append(pygame.Rect(player_x + player_width // 2 - bullet_width // 2, player_y, bullet_width, bullet_height))
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and player_x > 0:
+            player_x -= player_speed
+        if keys[pygame.K_RIGHT] and player_x < WIDTH - player_width:
+            player_x += player_speed
+        if keys[pygame.K_SPACE]:
+            if len(bullets) < 5:  # Limit the number of bullets
+                bullets.append(pygame.Rect(player_x + player_width // 2 - bullet_width // 2, player_y, bullet_width, bullet_height))
 
-    # Update enemies
-    if random.randint(1, 50) == 1:  # Spawn an enemy randomly
-        spawn_enemy()
-    for enemy in enemies:
-        enemy.y += enemy_speed
-        if enemy.y > HEIGHT:
-            enemies.remove(enemy)
-
-    # Update bullets
-    for bullet in bullets:
-        bullet.y -= bullet_speed
-        if bullet.y < 0:
-            bullets.remove(bullet)
-
-    # Collision detection
-    for bullet in bullets:
+        # Update enemies
+        if random.randint(1, 50) == 1:  # Spawn an enemy randomly
+            spawn_enemy()
         for enemy in enemies:
-            if bullet.colliderect(enemy):
-                bullets.remove(bullet)
+            enemy.y += enemy_speed
+            if enemy.y > HEIGHT:
                 enemies.remove(enemy)
-                break
 
-    draw_player()
-    draw_enemies()
-    draw_bullets()
+        # Update bullets
+        for bullet in bullets:
+            bullet.y -= bullet_speed
+            if bullet.y < 0:
+                bullets.remove(bullet)
 
-    pygame.display.flip()
-    clock.tick(60)
+        # Collision detection
+        for bullet in bullets:
+            for enemy in enemies:
+                if bullet.colliderect(enemy):
+                    bullets.remove(bullet)
+                    enemies.remove(enemy)
+                    break
 
-pygame.quit()
+        draw_player()
+        draw_enemies()
+        draw_bullets()
+
+        pygame.display.flip()
+        clock.tick(60)
+        await asyncio.sleep(0)
+
+asyncio.run(main())

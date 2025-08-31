@@ -70,7 +70,22 @@ files = [
     {file = "pygame-2.6.1.tar.gz", hash = "sha256:56fb02ead529cee00d415c3e007f75e0780c655909aaa8e8bf616ee09c9feb1f"},
 ]
 
+[[package]]
+name = "pygbag"
+version = "0.9.2"
+description = "package and run python/pygame-ce wasm (and more) directly in modern web browsers."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "pygbag-0.9.2-py3-none-any.whl", hash = "sha256:3a60a80cc28ed21e3d5d98c08a5d8f857911e38e411b6e590ba640158e8656c1"},
+    {file = "pygbag-0.9.2.tar.gz", hash = "sha256:0e31860742a8ba9c527135cbb6d64f6d7d8d7b23b71ee87a15f1de9474690c25"},
+]
+
+[package.extras]
+sim = ["aioconsole", "aiohttp", "asyncio-socks-server"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "cd2d544465119127621a3b8b8607558d822a8a8979acddf7dd6df1860e2a6ec6"
+content-hash = "7e18b96e2bf26ad80aaa840165d4f564388d8bed1a747d7062ac2995770e6ee8"
