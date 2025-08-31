@@ -24,8 +24,6 @@ player_speed = 5
 
 # Enemy settings
 enemy_width = 50
-enemy_height = 50
-enemy_speed = 2
 enemies = []
 
 # Bullet settings
@@ -47,11 +45,23 @@ powerup_start_time = 0
 clock = pygame.time.Clock()
 
 
+class Asteroid:
+    def __init__(self, x: int, y: int, size: int = enemy_width, speed: int = 2):
+        self.rect: pygame.Rect = pygame.Rect(x, y, size, size)
+        self.speed: int = speed
+
+    def move(self):
+        self.rect.centery += self.speed
+
+    def draw(self):
+        pygame.draw.rect(screen, RED, self.rect)
+
+
 def spawn_enemy():
     while True:
         x = random.randint(0, WIDTH - enemy_width)
-        new_enemy = pygame.Rect(x, 0, enemy_width, enemy_height)
-        if not any(new_enemy.colliderect(enemy) for enemy in enemies):
+        new_enemy = Asteroid(x, 0)
+        if not any(new_enemy.rect.colliderect(enemy) for enemy in enemies):
             enemies.append(new_enemy)
             break
 
@@ -137,8 +147,8 @@ async def main():
         if random.randint(1, 50) == 1:  # Spawn an enemy randomly
             spawn_enemy()
         for enemy in enemies:
-            enemy.y += enemy_speed
-            if enemy.y > HEIGHT:
+            enemy.move()
+            if enemy.rect.y > HEIGHT:
                 enemies.remove(enemy)
 
         # Update bullets
@@ -186,7 +196,7 @@ async def main():
 
         for bullet in bullets:
             for enemy in enemies:
-                if bullet.colliderect(enemy):
+                if bullet.colliderect(enemy.rect):
                     bullets.remove(bullet)
                     enemies.remove(enemy)
                     score += 1  # Increment score
@@ -199,7 +209,7 @@ async def main():
 
         # Check for collisions between enemies and player
         for enemy in enemies:
-            if enemy.colliderect(
+            if enemy.rect.colliderect(
                 pygame.Rect(player_x, player_y, player_width, player_height)
             ):
                 # Flash game over screen
