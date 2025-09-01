@@ -1,6 +1,10 @@
+from abc import ABC, abstractmethod
 import asyncio
+from dataclasses import dataclass
 import pygame
 import random
+from ecs.models import Entity, Component, System
+from ecs.managers import EntityManager, SystemManager
 
 # Initialize Pygame
 pygame.init()
@@ -43,6 +47,45 @@ powerup_start_time = 0
 
 # Game loop control
 clock = pygame.time.Clock()
+
+
+# Component Definitions
+@dataclass
+class PositionComponent(Component):
+    x: int
+    y: int
+
+
+@dataclass
+class VelocityComponent(Component):
+    dx: int = 0
+    dy: int = 0
+
+
+@dataclass
+class RectSpriteComponent(Component):
+    pos: PositionComponent
+    surface: pygame.Surface
+    width: int
+    height: int
+    color: tuple = (255, 255, 255)
+
+    @property
+    def rect(self) -> pygame.Rect:
+        return pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
+
+
+class RenderRectSystem(System):
+    def update(self, dt):
+        if self.entity_manager is None or not isinstance(
+            self.entity_manager, EntityManager
+        ):
+            return
+        # TO-DO: Type ignore should not be necessary here
+        for entity, draw_rect in self.entity_manager.pairs_for_type(
+            RectSpriteComponent
+        ):  # type: ignore
+            pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect)
 
 
 class Asteroid:
@@ -106,6 +149,18 @@ async def main():
     bullet_interval = 1000  # milliseconds
     refractory_period = 300  # milliseconds
     powerup_active = False
+    powerup_start_time: int = 0
+
+    # ECS Setup
+    entity_manager = EntityManager()
+    systems_manager = SystemManager(entity_manager)
+    systems_manager.add_system(RenderRectSystem(), priority=0)
+    new_entity = entity_manager.create_entity()
+    pos_component = PositionComponent(100, 100)
+    entity_manager.add_component(new_entity, pos_component)
+    entity_manager.add_component(
+        new_entity, RectSpriteComponent(pos_component, screen, 50, 50, WHITE)
+    )
 
     while running:
         screen.fill(BLACK)
@@ -115,6 +170,8 @@ async def main():
                 running = False
 
         current_time = pygame.time.get_ticks()
+
+        systems_manager.update(0)
 
         keys = pygame.key.get_pressed()
         if (

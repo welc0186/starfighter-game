@@ -1,0 +1,3 @@
+[submodule "src/ecs"]
+	path = src/ecs
+	url = https://github.com/welc0186/ecs.git
