@@ -1,9 +1,13 @@
+from abc import ABC, abstractmethod
 import asyncio
+from dataclasses import dataclass
 import pygame
 import random
 
 # Initialize Pygame
 pygame.init()
+
+FPS = 60
 
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
@@ -45,7 +49,46 @@ powerup_start_time = 0
 clock = pygame.time.Clock()
 
 
-class Asteroid:
+class Entity(ABC):
+    def __init__(self):
+        self.components = {}
+
+    def add_component(self, component):
+        self.components[type(component)] = component
+
+    def update(self):
+        for component in self.components.values():
+            if hasattr(component, "update"):
+                component.update()
+
+
+class Component(ABC):
+
+    @abstractmethod
+    def update(self):
+        pass
+
+
+@dataclass
+class PositionComponent(Component):
+    x: int
+    y: int
+
+    def update(self):
+        pass
+
+
+class MoveLinearComponent(Component):
+    def __init__(self, position: PositionComponent, speed: tuple[int, int]):
+        self.position = position
+        self.speed = speed
+
+    def update(self):
+        self.position.x += self.speed[0]
+        self.position.y += self.speed[1]
+
+
+class AsteroidEnemy:
     def __init__(self, x: int, y: int, size: int = enemy_width, speed: int = 2):
         self.rect: pygame.Rect = pygame.Rect(x, y, size, size)
         self.speed: int = speed
@@ -60,7 +103,7 @@ class Asteroid:
 def spawn_enemy():
     while True:
         x = random.randint(0, WIDTH - enemy_width)
-        new_enemy = Asteroid(x, 0)
+        new_enemy = AsteroidEnemy(x, 0)
         if not any(new_enemy.rect.colliderect(enemy) for enemy in enemies):
             enemies.append(new_enemy)
             break
@@ -233,7 +276,7 @@ async def main():
         draw_powerups()
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(FPS)
         await asyncio.sleep(0)
 
 
