@@ -96,10 +96,9 @@ class RenderRectSystem(System):
             self.entity_manager, EntityManager
         ):
             return
-        # TO-DO: Type ignore should not be necessary here
         for entity, draw_rect in self.entity_manager.pairs_for_type(
             RectSpriteComponent
-        ):  # type: ignore
+        ):
             pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect)
 
 
@@ -109,14 +108,13 @@ class RectColliderSystem(System):
             self.entity_manager, EntityManager
         ):
             return
-        # TO-DO: Type ignore should not be necessary here
         for entity, collider in self.entity_manager.pairs_for_type(
             RectColliderComponent
-        ):  # type: ignore
+        ):
             collider.rect_colliders = []
             for other_entity, other_collider in self.entity_manager.pairs_for_type(
                 RectColliderComponent
-            ):  # type: ignore
+            ):
                 if entity != other_entity and collider.rect.rect.colliderect(
                     other_collider.rect.rect
                 ):
@@ -129,10 +127,9 @@ class MoveLinearSystem(System):
             self.entity_manager, EntityManager
         ):
             return
-        # TO-DO: Type ignore should not be necessary here
         for entity, speed_comp in self.entity_manager.pairs_for_type(
             MoveLinearComponent
-        ):  # type: ignore
+        ):
             pos = self.entity_manager.component_for_entity(entity, PositionComponent)
             if pos is None:
                 return
