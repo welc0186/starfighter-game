@@ -4,8 +4,12 @@ from dataclasses import dataclass
 from typing import Tuple
 import pygame
 import random
-from ecs.models import Entity, Component, System
-from ecs.managers import EntityManager, SystemManager
+
+from ecs.system import Component, System
+from ecs.system_manager import SystemManager
+
+from ecs.entity import Entity
+from ecs.entity_manager import EntityManager
 
 # Initialize Pygame
 pygame.init()
@@ -83,7 +87,7 @@ class RectSpriteComponent(Component):
 @dataclass
 class RectColliderComponent(Component):
     rect: RectComponent
-    rect_colliders: list[RectComponent] = []
+    rect_colliders: list | None = None
 
 
 class RenderRectSystem(System):
@@ -97,6 +101,26 @@ class RenderRectSystem(System):
             RectSpriteComponent
         ):  # type: ignore
             pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect)
+
+
+class RectColliderSystem(System):
+    def update(self, dt):
+        if self.entity_manager is None or not isinstance(
+            self.entity_manager, EntityManager
+        ):
+            return
+        # TO-DO: Type ignore should not be necessary here
+        for entity, collider in self.entity_manager.pairs_for_type(
+            RectColliderComponent
+        ):  # type: ignore
+            collider.rect_colliders = []
+            for other_entity, other_collider in self.entity_manager.pairs_for_type(
+                RectColliderComponent
+            ):  # type: ignore
+                if entity != other_entity and collider.rect.rect.colliderect(
+                    other_collider.rect.rect
+                ):
+                    collider.rect_colliders.append(other_collider.rect)
 
 
 class MoveLinearSystem(System):
