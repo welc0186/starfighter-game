@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
+from typing import Tuple
 import pygame
 import random
 from ecs.models import Entity, Component, System
@@ -57,22 +58,32 @@ class PositionComponent(Component):
 
 
 @dataclass
-class VelocityComponent(Component):
-    dx: int = 0
-    dy: int = 0
+class MoveLinearComponent(Component):
+    speed: Tuple[int, int]
 
 
 @dataclass
-class RectSpriteComponent(Component):
+class RectComponent(Component):
     pos: PositionComponent
-    surface: pygame.Surface
     width: int
     height: int
-    color: tuple = (255, 255, 255)
 
     @property
     def rect(self) -> pygame.Rect:
         return pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
+
+
+@dataclass
+class RectSpriteComponent(Component):
+    surface: pygame.Surface
+    rect: RectComponent
+    color: tuple = (255, 255, 255)
+
+
+@dataclass
+class RectColliderComponent(Component):
+    rect: RectComponent
+    rect_colliders: list[RectComponent] = []
 
 
 class RenderRectSystem(System):
@@ -86,6 +97,23 @@ class RenderRectSystem(System):
             RectSpriteComponent
         ):  # type: ignore
             pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect)
+
+
+class MoveLinearSystem(System):
+    def update(self, dt):
+        if self.entity_manager is None or not isinstance(
+            self.entity_manager, EntityManager
+        ):
+            return
+        # TO-DO: Type ignore should not be necessary here
+        for entity, speed_comp in self.entity_manager.pairs_for_type(
+            MoveLinearComponent
+        ):  # type: ignore
+            pos = self.entity_manager.component_for_entity(entity, PositionComponent)
+            if pos is None:
+                return
+            pos.x += speed_comp.speed[0]
+            pos.y += speed_comp.speed[1]
 
 
 class Asteroid:
@@ -154,13 +182,17 @@ async def main():
     # ECS Setup
     entity_manager = EntityManager()
     systems_manager = SystemManager(entity_manager)
-    systems_manager.add_system(RenderRectSystem(), priority=0)
+    systems_manager.add_system(RenderRectSystem(), priority=99)
+    systems_manager.add_system(MoveLinearSystem(), priority=0)
     new_entity = entity_manager.create_entity()
     pos_component = PositionComponent(100, 100)
+    rect_component = RectComponent(pos_component, 50, 50)
     entity_manager.add_component(new_entity, pos_component)
+    entity_manager.add_component(new_entity, rect_component)
     entity_manager.add_component(
-        new_entity, RectSpriteComponent(pos_component, screen, 50, 50, WHITE)
+        new_entity, RectSpriteComponent(screen, rect_component, WHITE)
     )
+    entity_manager.add_component(new_entity, MoveLinearComponent((0, 2)))
 
     while running:
         screen.fill(BLACK)
