@@ -5,11 +5,13 @@ from typing import Tuple
 import pygame
 import random
 
-from ecs.system import Component, System
+from ecs.system import System
 from ecs.system_manager import SystemManager
 
 from ecs.entity import Entity
 from ecs.entity_manager import EntityManager
+
+from ecs.component import Component
 
 # Initialize Pygame
 pygame.init()
@@ -90,29 +92,23 @@ class RectColliderComponent(Component):
     rect_colliders: list | None = None
 
 
+class CustomUpdateComponent(ABC, Component):
+    @abstractmethod
+    def update(self, dt: float) -> None:
+        pass
+
+
 class RenderRectSystem(System):
     def update(self, dt):
-        if self.entity_manager is None or not isinstance(
-            self.entity_manager, EntityManager
-        ):
-            return
-        for entity, draw_rect in self.entity_manager.pairs_for_type(
-            RectSpriteComponent
-        ):
-            pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect)
+        for entity, draw_rect in self.get_components(RectSpriteComponent):
+            pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect.rect)
 
 
 class RectColliderSystem(System):
     def update(self, dt):
-        if self.entity_manager is None or not isinstance(
-            self.entity_manager, EntityManager
-        ):
-            return
-        for entity, collider in self.entity_manager.pairs_for_type(
-            RectColliderComponent
-        ):
+        for entity, collider in self.get_components(RectColliderComponent):
             collider.rect_colliders = []
-            for other_entity, other_collider in self.entity_manager.pairs_for_type(
+            for other_entity, other_collider in self.get_components(
                 RectColliderComponent
             ):
                 if entity != other_entity and collider.rect.rect.colliderect(
@@ -123,14 +119,8 @@ class RectColliderSystem(System):
 
 class MoveLinearSystem(System):
     def update(self, dt):
-        if self.entity_manager is None or not isinstance(
-            self.entity_manager, EntityManager
-        ):
-            return
-        for entity, speed_comp in self.entity_manager.pairs_for_type(
-            MoveLinearComponent
-        ):
-            pos = self.entity_manager.component_for_entity(entity, PositionComponent)
+        for entity, speed_comp in self.get_components(MoveLinearComponent):
+            pos = self.get_component(entity, PositionComponent)
             if pos is None:
                 return
             pos.x += speed_comp.speed[0]
