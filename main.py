@@ -1,16 +1,14 @@
 from abc import ABC, abstractmethod
 import asyncio
-from dataclasses import dataclass
-from typing import Tuple
+from dataclasses import dataclass, field
+from typing import Tuple, Optional, List
 import pygame
 import random
 
 from ecs.system import System
 from ecs.system_manager import SystemManager
-
 from ecs.entity import Entity
 from ecs.entity_manager import EntityManager
-
 from ecs.component import Component
 
 # Initialize Pygame
@@ -25,316 +23,474 @@ pygame.display.set_caption("Starfighter")
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-
-# Player settings
-player_width = 50
-player_height = 50
-player_x = WIDTH // 2 - player_width // 2
-player_y = HEIGHT - player_height - 10
-player_speed = 5
-
-# Enemy settings
-enemy_width = 50
-enemies = []
-
-# Bullet settings
-bullet_width = 5
-bullet_height = 10
-bullets = []
-bullet_speed = 7
-
-# Power-up settings
-powerup_radius = 20
-powerup_speed = 2
-powerups = []
-powerup_active = False
-powerup_duration = 5000  # milliseconds
-powerup_start_time = 0
-
-
-# Game loop control
-clock = pygame.time.Clock()
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
 
 
 # Component Definitions
 @dataclass
 class PositionComponent(Component):
-    x: int
-    y: int
+    x: float
+    y: float
 
 
 @dataclass
-class MoveLinearComponent(Component):
-    speed: Tuple[int, int]
+class VelocityComponent(Component):
+    vx: float
+    vy: float
 
 
 @dataclass
-class RectComponent(Component):
-    pos: PositionComponent
-    width: int
-    height: int
-
-    @property
-    def rect(self) -> pygame.Rect:
-        return pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
+class SizeComponent(Component):
+    width: float
+    height: float
 
 
 @dataclass
-class RectSpriteComponent(Component):
-    surface: pygame.Surface
-    rect: RectComponent
-    color: tuple = (255, 255, 255)
+class CircleComponent(Component):
+    radius: float
 
 
 @dataclass
-class RectColliderComponent(Component):
-    rect: RectComponent
-    rect_colliders: list | None = None
+class ColorComponent(Component):
+    color: Tuple[int, int, int]
 
 
-class CustomUpdateComponent(ABC, Component):
-    @abstractmethod
-    def update(self, dt: float) -> None:
-        pass
+@dataclass
+class PlayerComponent(Component):
+    speed: float = 5.0
+    fire_rate: float = 1000.0  # milliseconds
+    last_fire_time: float = 0.0
+    direction: int = 1  # 1 for right, -1 for left
+    last_space_time: float = 0.0
 
 
-class RenderRectSystem(System):
-    def update(self, dt):
-        for entity, draw_rect in self.get_components(RectSpriteComponent):
-            pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect.rect)
+@dataclass
+class EnemyComponent(Component):
+    pass
 
 
-class RectColliderSystem(System):
-    def update(self, dt):
-        for entity, collider in self.get_components(RectColliderComponent):
-            collider.rect_colliders = []
-            for other_entity, other_collider in self.get_components(
-                RectColliderComponent
-            ):
-                if entity != other_entity and collider.rect.rect.colliderect(
-                    other_collider.rect.rect
+@dataclass
+class BulletComponent(Component):
+    pass
+
+
+@dataclass
+class PowerUpComponent(Component):
+    duration: float = 5000.0  # milliseconds
+    fire_rate_multiplier: float = 0.5  # makes firing twice as fast
+
+
+@dataclass
+class CollisionComponent(Component):
+    collided_entities: List[Entity] = field(default_factory=list)
+
+
+@dataclass
+class LifetimeComponent(Component):
+    remaining_time: float
+
+
+@dataclass
+class GameStateComponent(Component):
+    score: int = 0
+    power_up_active: bool = False
+    power_up_end_time: float = 0.0
+
+
+# Custom Systems
+class MovementSystem(System):
+    def update(self, dt: float):
+        for entity, vel in self.get_components(VelocityComponent):
+            pos = self.get_component_safe(entity, PositionComponent)
+            if pos:
+                pos.x += vel.vx * dt
+                pos.y += vel.vy * dt
+
+
+class BoundarySystem(System):
+    def update(self, dt: float):
+        # Remove entities that are off-screen
+        for entity, pos in self.get_components(PositionComponent):
+            size = self.get_component_safe(entity, SizeComponent)
+            circle = self.get_component_safe(entity, CircleComponent)
+
+            # Check if entity is completely off screen
+            if size:
+                if (
+                    pos.x < -size.width
+                    or pos.x > WIDTH + size.width
+                    or pos.y < -size.height
+                    or pos.y > HEIGHT + size.height
                 ):
-                    collider.rect_colliders.append(other_collider.rect)
+                    self.remove_entity(entity)
+            elif circle:
+                if (
+                    pos.x < -circle.radius * 2
+                    or pos.x > WIDTH + circle.radius * 2
+                    or pos.y < -circle.radius * 2
+                    or pos.y > HEIGHT + circle.radius * 2
+                ):
+                    self.remove_entity(entity)
 
 
-class MoveLinearSystem(System):
-    def update(self, dt):
-        for entity, speed_comp in self.get_components(MoveLinearComponent):
-            pos = self.get_component(entity, PositionComponent)
-            if pos is None:
+class PlayerControlSystem(System):
+    def update(self, dt: float):
+        current_time = pygame.time.get_ticks()
+        keys = pygame.key.get_pressed()
+
+        # for entity, (player, pos, size) in self.get_components(
+        for entity, player in self.get_components(PlayerComponent):
+            # Handle space key for direction change
+            if keys[pygame.K_SPACE] and (current_time - player.last_space_time) > 300:
+                player.direction *= -1
+                player.last_space_time = current_time
+
+            # Handle boundary collision and movement
+            vel = self.get_component_safe(entity, VelocityComponent)
+            pos = self.get_component_safe(entity, PositionComponent)
+            size = self.get_component_safe(entity, SizeComponent)
+            if not (vel and pos and size):
                 return
-            pos.x += speed_comp.speed[0]
-            pos.y += speed_comp.speed[1]
+            if pos.x <= 0:
+                pos.x = 0
+                player.direction = 1
+            elif pos.x >= WIDTH - size.width:
+                pos.x = WIDTH - size.width
+                player.direction = -1
+
+            vel.vx = player.speed * player.direction
+
+            # Handle firing
+            game_state = None
+            for _, gs in self.get_components(GameStateComponent):
+                game_state = gs
+                break
+
+            current_fire_rate = player.fire_rate
+            if game_state and game_state.power_up_active:
+                current_fire_rate *= 0.5  # Fire twice as fast with power-up
+
+            if current_time - player.last_fire_time > current_fire_rate:
+                self.create_bullet(pos.x + size.width / 2, pos.y)
+                player.last_fire_time = current_time
+
+    def create_bullet(self, x: float, y: float):
+        # TO-DO: Handle entity manager checking better
+        if not self._is_entity_manager(self.entity_manager):
+            return
+        bullet_entity = self.entity_manager.create_entity()
+        self.entity_manager.add_component(bullet_entity, PositionComponent(x - 2.5, y))
+        self.entity_manager.add_component(bullet_entity, VelocityComponent(0, -400))
+        self.entity_manager.add_component(bullet_entity, SizeComponent(5, 10))
+        self.entity_manager.add_component(bullet_entity, ColorComponent(WHITE))
+        self.entity_manager.add_component(bullet_entity, BulletComponent())
+        self.entity_manager.add_component(bullet_entity, CollisionComponent())
 
 
-class Asteroid:
-    def __init__(self, x: int, y: int, size: int = enemy_width, speed: int = 2):
-        self.rect: pygame.Rect = pygame.Rect(x, y, size, size)
-        self.speed: int = speed
+class EnemySpawnSystem(System):
+    def __init__(self):
+        super().__init__()
+        self.spawn_timer = 0
 
-    def move(self):
-        self.rect.centery += self.speed
+    def update(self, dt: float):
+        self.spawn_timer += dt
+        if (
+            self.spawn_timer > 0.02
+        ):  # Spawn every 20ms (roughly 1/50 chance per frame at 60fps)
+            if random.randint(1, 50) == 1:
+                self.spawn_enemy()
+            self.spawn_timer = 0
 
-    def draw(self):
-        pygame.draw.rect(screen, RED, self.rect)
+    def spawn_enemy(self):
+        if not self._is_entity_manager(self.entity_manager):
+            return
+        x = random.randint(0, WIDTH - 50)
+        enemy_entity = self.entity_manager.create_entity()
+        self.entity_manager.add_component(enemy_entity, PositionComponent(x, 0))
+        self.entity_manager.add_component(enemy_entity, VelocityComponent(0, 120))
+        self.entity_manager.add_component(enemy_entity, SizeComponent(50, 50))
+        self.entity_manager.add_component(enemy_entity, ColorComponent(RED))
+        self.entity_manager.add_component(enemy_entity, EnemyComponent())
+        self.entity_manager.add_component(enemy_entity, CollisionComponent())
 
 
-def spawn_enemy():
-    while True:
-        x = random.randint(0, WIDTH - enemy_width)
-        new_enemy = Asteroid(x, 0)
-        if not any(new_enemy.rect.colliderect(enemy) for enemy in enemies):
-            enemies.append(new_enemy)
+class PowerUpSpawnSystem(System):
+    def __init__(self):
+        super().__init__()
+        self.spawn_timer = 0
+
+    def update(self, dt: float):
+        self.spawn_timer += dt
+        if self.spawn_timer > 0.02:  # Check every 20ms
+            if random.randint(1, 300) == 1:
+                self.spawn_powerup()
+            self.spawn_timer = 0
+
+    def spawn_powerup(self):
+        if not self._is_entity_manager(self.entity_manager):
+            return
+        x = random.randint(20, WIDTH - 20)
+        powerup_entity = self.entity_manager.create_entity()
+        self.entity_manager.add_component(powerup_entity, PositionComponent(x, 0))
+        self.entity_manager.add_component(powerup_entity, VelocityComponent(0, 120))
+        self.entity_manager.add_component(powerup_entity, CircleComponent(20))
+        self.entity_manager.add_component(powerup_entity, ColorComponent(YELLOW))
+        self.entity_manager.add_component(powerup_entity, PowerUpComponent())
+        self.entity_manager.add_component(powerup_entity, CollisionComponent())
+
+
+class CollisionSystem(System):
+    def update(self, dt: float):
+        # Clear previous collisions
+        for entity, collision in self.get_components(CollisionComponent):
+            collision.collided_entities.clear()
+
+        # Detect collisions
+        collision_entities = list(self.get_components(CollisionComponent))
+
+        for i, (entity1, collision1) in enumerate(collision_entities):
+            for j, (entity2, collision2) in enumerate(
+                collision_entities[i + 1 :], i + 1
+            ):
+                if self.check_collision(entity1, entity2):
+                    collision1.collided_entities.append(entity2)
+                    collision2.collided_entities.append(entity1)
+
+    def check_collision(self, entity1: Entity, entity2: Entity) -> bool:
+        pos1 = self.get_component_safe(entity1, PositionComponent)
+        pos2 = self.get_component_safe(entity2, PositionComponent)
+
+        if not pos1 or not pos2:
+            return False
+
+        # Rectangle collision
+        size1 = self.get_component_safe(entity1, SizeComponent)
+        size2 = self.get_component_safe(entity2, SizeComponent)
+        circle1 = self.get_component_safe(entity1, CircleComponent)
+        circle2 = self.get_component_safe(entity2, CircleComponent)
+
+        # Rect vs Rect
+        if size1 and size2:
+            rect1 = pygame.Rect(pos1.x, pos1.y, size1.width, size1.height)
+            rect2 = pygame.Rect(pos2.x, pos2.y, size2.width, size2.height)
+            return rect1.colliderect(rect2)
+
+        # Circle vs Rect
+        elif circle1 and size2:
+            circle_center = (pos1.x, pos1.y)
+            rect = pygame.Rect(pos2.x, pos2.y, size2.width, size2.height)
+            return self.circle_rect_collision(circle_center, circle1.radius, rect)
+
+        # Rect vs Circle
+        elif size1 and circle2:
+            circle_center = (pos2.x, pos2.y)
+            rect = pygame.Rect(pos1.x, pos1.y, size1.width, size1.height)
+            return self.circle_rect_collision(circle_center, circle2.radius, rect)
+
+        return False
+
+    def circle_rect_collision(self, circle_center, radius, rect):
+        closest_x = max(rect.left, min(circle_center[0], rect.right))
+        closest_y = max(rect.top, min(circle_center[1], rect.bottom))
+        distance_x = circle_center[0] - closest_x
+        distance_y = circle_center[1] - closest_y
+        return (distance_x**2 + distance_y**2) <= radius**2
+
+
+class GameLogicSystem(System):
+    def update(self, dt: float):
+        current_time = pygame.time.get_ticks()
+
+        # Get game state
+        game_state = None
+        for _, gs in self.get_components(GameStateComponent):
+            game_state = gs
             break
 
+        if not game_state:
+            return
 
-def draw_player():
-    pygame.draw.rect(screen, WHITE, (player_x, player_y, player_width, player_height))
+        # Check power-up expiration
+        if game_state.power_up_active and current_time > game_state.power_up_end_time:
+            game_state.power_up_active = False
+
+        # Handle collisions
+        for entity, collision in self.get_components(CollisionComponent):
+            bullet_comp = self.get_component_safe(entity, BulletComponent)
+            player_comp = self.get_component_safe(entity, PlayerComponent)
+            powerup_comp = self.get_component_safe(entity, PowerUpComponent)
+            enemy_comp = self.get_component_safe(entity, EnemyComponent)
+
+            for collided_entity in collision.collided_entities:
+                collided_bullet = self.get_component_safe(
+                    collided_entity, BulletComponent
+                )
+                collided_player = self.get_component_safe(
+                    collided_entity, PlayerComponent
+                )
+                collided_powerup = self.get_component_safe(
+                    collided_entity, PowerUpComponent
+                )
+                collided_enemy = self.get_component_safe(
+                    collided_entity, EnemyComponent
+                )
+
+                # Bullet hits enemy
+                if bullet_comp and collided_enemy:
+                    self.remove_entity(entity)
+                    self.remove_entity(collided_entity)
+                    game_state.score += 1
+
+                # Enemy hits bullet
+                elif enemy_comp and collided_bullet:
+                    self.remove_entity(entity)
+                    self.remove_entity(collided_entity)
+                    game_state.score += 1
+
+                # Player hits power-up
+                elif player_comp and collided_powerup:
+                    self.remove_entity(collided_entity)
+                    game_state.power_up_active = True
+                    game_state.power_up_end_time = current_time + 5000
+
+                # Power-up hits player
+                elif powerup_comp and collided_player:
+                    self.remove_entity(entity)
+                    game_state.power_up_active = True
+                    game_state.power_up_end_time = current_time + 5000
+
+                # Player hits enemy - Game Over
+                elif player_comp and collided_enemy:
+                    asyncio.create_task(self.game_over_sequence(game_state))
+
+    async def game_over_sequence(self, game_state: GameStateComponent):
+        # Flash screen
+        for _ in range(3):
+            screen.fill(RED)
+            pygame.display.flip()
+            await asyncio.sleep(0.5)
+            screen.fill(BLACK)
+            pygame.display.flip()
+            await asyncio.sleep(0.5)
+
+        # Reset game
+        game_state.score = 0
+        game_state.power_up_active = False
+        game_state.power_up_end_time = 0
+
+        # Clear all entities except player and game state
+        entities_to_remove = []
+        if not self._is_entity_manager(self.entity_manager):
+            return
+        for component_type in self.entity_manager.database:
+            for entity in self.entity_manager.database[component_type].keys():
+                if not self.get_component_safe(
+                    entity, PlayerComponent
+                ) and not self.get_component_safe(entity, GameStateComponent):
+                    entities_to_remove.append(entity)
+
+        for entity in entities_to_remove:
+            self.remove_entity(entity)
+
+        # Reset player position
+        for entity, player in self.get_components(PlayerComponent):
+            pos = self.get_component_safe(entity, PositionComponent)
+            if pos:
+                pos.x = WIDTH // 2 - 25
+                pos.y = HEIGHT - 60
+                player.direction = 1
 
 
-def draw_enemies():
-    for enemy in enemies:
-        pygame.draw.rect(screen, RED, enemy)
+class RenderSystem(System):
+    def update(self, dt: float):
+        screen.fill(BLACK)
 
+        # Render rectangles
+        # for entity, (pos, size, color) in self.get_components(
+        for entity, size in self.get_components(SizeComponent):
+            pos = self.get_component_safe(entity, PositionComponent)
+            color = self.get_component_safe(entity, ColorComponent)
+            if not (pos and color):
+                continue
+            rect = pygame.Rect(pos.x, pos.y, size.width, size.height)
+            pygame.draw.rect(screen, color.color, rect)
 
-def draw_bullets():
-    for bullet in bullets:
-        pygame.draw.rect(screen, WHITE, bullet)
+        # Render circles
+        for entity, circle in self.get_components(CircleComponent):
+            pos = self.get_component_safe(entity, PositionComponent)
+            color = self.get_component_safe(entity, ColorComponent)
+            if not (pos and color):
+                continue
+            pygame.draw.circle(
+                screen, color.color, (int(pos.x), int(pos.y)), int(circle.radius)
+            )
 
+        # Render UI
+        for entity, game_state in self.get_components(GameStateComponent):
+            font = pygame.font.Font(None, 36)
+            score_text = font.render(f"Score: {game_state.score}", True, WHITE)
+            screen.blit(score_text, (10, 10))
 
-def spawn_powerup():
-    x = random.randint(powerup_radius, WIDTH - powerup_radius)
-    new_powerup = pygame.Rect(x, 0, powerup_radius * 2, powerup_radius * 2)
-    powerups.append(new_powerup)
-
-
-def draw_powerups():
-    for powerup in powerups:
-        pygame.draw.circle(
-            screen,
-            (255, 255, 0),
-            (powerup.x + powerup_radius, powerup.y + powerup_radius),
-            powerup_radius,
-        )
+            if game_state.power_up_active:
+                powerup_text = font.render("POWER UP ACTIVE!", True, GREEN)
+                screen.blit(powerup_text, (10, 50))
 
 
 async def main():
-    global player_x, player_y
-    score = 0
-    running = True
-    player_speed = 5
-    last_space_time = 0
-    last_bullet_time = 0
-    bullet_interval = 1000  # milliseconds
-    refractory_period = 300  # milliseconds
-    powerup_active = False
-    powerup_start_time: int = 0
+    clock = pygame.time.Clock()
 
     # ECS Setup
     entity_manager = EntityManager()
-    systems_manager = SystemManager(entity_manager)
-    systems_manager.add_system(RenderRectSystem(), priority=99)
-    systems_manager.add_system(MoveLinearSystem(), priority=0)
-    new_entity = entity_manager.create_entity()
-    pos_component = PositionComponent(100, 100)
-    rect_component = RectComponent(pos_component, 50, 50)
-    entity_manager.add_component(new_entity, pos_component)
-    entity_manager.add_component(new_entity, rect_component)
+    system_manager = SystemManager(entity_manager)
+
+    # Add systems in order of execution
+    system_manager.add_system(PlayerControlSystem(), priority=1)
+    system_manager.add_system(EnemySpawnSystem(), priority=2)
+    system_manager.add_system(PowerUpSpawnSystem(), priority=3)
+    system_manager.add_system(MovementSystem(), priority=4)
+    system_manager.add_system(CollisionSystem(), priority=5)
+    system_manager.add_system(GameLogicSystem(), priority=6)
+    system_manager.add_system(BoundarySystem(), priority=7)
+    system_manager.add_system(RenderSystem(), priority=99)
+
+    # Create game state entity
+    game_entity = entity_manager.create_entity()
+    entity_manager.add_component(game_entity, GameStateComponent())
+
+    # Create player entity
+    player_entity = entity_manager.create_entity()
     entity_manager.add_component(
-        new_entity, RectSpriteComponent(screen, rect_component, WHITE)
+        player_entity, PositionComponent(WIDTH // 2 - 25, HEIGHT - 60)
     )
-    entity_manager.add_component(new_entity, MoveLinearComponent((0, 2)))
+    entity_manager.add_component(player_entity, VelocityComponent(5, 0))
+    entity_manager.add_component(player_entity, SizeComponent(50, 50))
+    entity_manager.add_component(player_entity, ColorComponent(WHITE))
+    entity_manager.add_component(player_entity, PlayerComponent())
+    entity_manager.add_component(player_entity, CollisionComponent())
+
+    running = True
+    last_time = pygame.time.get_ticks()
 
     while running:
-        screen.fill(BLACK)
+        current_time = pygame.time.get_ticks()
+        dt = current_time - last_time
+        last_time = current_time
 
+        # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        current_time = pygame.time.get_ticks()
-
-        systems_manager.update(0)
-
-        keys = pygame.key.get_pressed()
-        if (
-            keys[pygame.K_SPACE]
-            and (current_time - last_space_time) > refractory_period
-        ):
-            player_speed = -player_speed  # Toggle direction
-            last_space_time = current_time
-        if player_x < 0:
-            player_x = 0
-            player_speed = abs(player_speed)
-        elif player_x > WIDTH - player_width:
-            player_x = WIDTH - player_width
-            player_speed = -abs(player_speed)
-
-        player_x += player_speed
-
-        # Fire a bullet every second
-        if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second
-            bullet = pygame.Rect(
-                player_x + player_width // 2 - bullet_width // 2,
-                player_y,
-                bullet_width,
-                bullet_height,
-            )
-            bullets.append(bullet)
-            last_bullet_time = current_time
-
-        # Update enemies
-        if random.randint(1, 50) == 1:  # Spawn an enemy randomly
-            spawn_enemy()
-        for enemy in enemies:
-            enemy.move()
-            if enemy.rect.y > HEIGHT:
-                enemies.remove(enemy)
-
-        # Update bullets
-        for bullet in bullets:
-            bullet.y -= bullet_speed
-            if bullet.y < 0:
-                bullets.remove(bullet)
-
-        # Update power-ups
-        if random.randint(1, 300) == 1:  # Spawn a power-up randomly
-            spawn_powerup()
-        for powerup in powerups[:]:
-            powerup.y += powerup_speed
-            if powerup.y > HEIGHT:
-                powerups.remove(powerup)
-
-        # Check for collisions between player and power-ups
-        player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
-        for powerup in powerups[:]:
-            if player_rect.colliderect(powerup):
-                powerups.remove(powerup)
-                powerup_active = True
-                powerup_start_time = current_time
-
-        # Handle power-up effect duration
-        if powerup_active:
-            bullet_interval = 500  # Fire bullets every 0.5 seconds
-            if current_time - powerup_start_time > powerup_duration:
-                powerup_active = False
-                bullet_interval = 1000  # Reset to normal firing rate
-        else:
-            bullet_interval = 1000  # Normal firing rate
-
-        # Fire a bullet based on current bullet_interval
-        if current_time - last_bullet_time > bullet_interval:
-            bullet = pygame.Rect(
-                player_x + player_width // 2 - bullet_width // 2,
-                player_y,
-                bullet_width,
-                bullet_height,
-            )
-            bullets.append(bullet)
-            last_bullet_time = current_time
-        # Collision detection
-
-        for bullet in bullets:
-            for enemy in enemies:
-                if bullet.colliderect(enemy.rect):
-                    bullets.remove(bullet)
-                    enemies.remove(enemy)
-                    score += 1  # Increment score
-                    break
-
-        # Display score
-        font = pygame.font.Font(None, 36)
-        score_text = font.render(f"Score: {score}", True, WHITE)
-        screen.blit(score_text, (10, 10))  # Draw score at the top-left corner
-
-        # Check for collisions between enemies and player
-        for enemy in enemies:
-            if enemy.rect.colliderect(
-                pygame.Rect(player_x, player_y, player_width, player_height)
-            ):
-                # Flash game over screen
-                for _ in range(3):  # Flash 3 times
-                    screen.fill(RED)
-                    pygame.display.flip()
-                    await asyncio.sleep(0.5)
-                    screen.fill(BLACK)
-                    pygame.display.flip()
-                    await asyncio.sleep(0.5)
-                # Restart the game
-                enemies.clear()
-                bullets.clear()
-                score = 0
-                player_x = WIDTH // 2 - player_width // 2
-                player_y = HEIGHT - player_height - 10
-
-        draw_player()
-        draw_enemies()
-        draw_bullets()
-        draw_powerups()
+        # Update all systems
+        system_manager.update(dt)
 
         pygame.display.flip()
         clock.tick(60)
         await asyncio.sleep(0)
 
+    pygame.quit()
 
-asyncio.run(main())
+
+if __name__ == "__main__":
+    asyncio.run(main())
