@@ -120,7 +120,7 @@ class RectColliderSystem(System):
 class MoveLinearSystem(System):
     def update(self, dt):
         for entity, speed_comp in self.get_components(MoveLinearComponent):
-            pos = self.get_component(entity, PositionComponent)
+            pos = self.get_component_safe(entity, PositionComponent)
             if pos is None:
                 return
             pos.x += speed_comp.speed[0]
@@ -137,6 +137,34 @@ class Asteroid:
 
     def draw(self):
         pygame.draw.rect(screen, RED, self.rect)
+
+
+class AsteroidSpawner:
+    def __init__(self, spawn_interval: int, entity_manager: EntityManager):
+        self._spawn_interval = spawn_interval
+        self._last_spawn_time = 0
+        self._entity_manager = entity_manager
+
+    def spawn(self, current_time: int) -> Entity | None:
+        if current_time - self._last_spawn_time < self._spawn_interval:
+            return None
+        x = random.randint(0, WIDTH - enemy_width)
+        new_enemy = self._entity_manager.create_entity()
+        pos_component = PositionComponent(x, 0)
+        rect_component = RectComponent(pos_component, 50, 50)
+        rect_sprite_component = RectSpriteComponent(screen, rect_component, RED)
+        move_linear_component = MoveLinearComponent((0, 2))
+        self._entity_manager.add_components(
+            new_enemy,
+            [
+                pos_component,
+                rect_component,
+                rect_sprite_component,
+                move_linear_component,
+            ],
+        )
+        # enemies.append(new_enemy)
+        self._last_spawn_time = current_time
 
 
 def spawn_enemy():
@@ -205,6 +233,8 @@ async def main():
     )
     entity_manager.add_component(new_entity, MoveLinearComponent((0, 2)))
 
+    asteroid_spawner = AsteroidSpawner(1000, entity_manager)
+
     while running:
         screen.fill(BLACK)
 
@@ -215,6 +245,7 @@ async def main():
         current_time = pygame.time.get_ticks()
 
         systems_manager.update(0)
+        asteroid_spawner.spawn(current_time)
 
         keys = pygame.key.get_pressed()
         if (
@@ -244,8 +275,8 @@ async def main():
             last_bullet_time = current_time
 
         # Update enemies
-        if random.randint(1, 50) == 1:  # Spawn an enemy randomly
-            spawn_enemy()
+        # if random.randint(1, 50) == 1:  # Spawn an enemy randomly
+        #     spawn_enemy()
         for enemy in enemies:
             enemy.move()
             if enemy.rect.y > HEIGHT:
