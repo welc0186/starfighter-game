@@ -13,6 +13,10 @@ from ecs.entity_manager import EntityManager
 
 from ecs.component import Component
 
+from gamelib.ecs.geometry import MoveLinearSystem
+from gamelib.ecs.rendering import RenderRectSystem
+from starfighter_game.asteroid import AsteroidSpawner
+
 # Initialize Pygame
 pygame.init()
 
@@ -56,124 +60,10 @@ powerup_start_time = 0
 clock = pygame.time.Clock()
 
 
-# Component Definitions
-@dataclass
-class PositionComponent(Component):
-    x: int
-    y: int
-
-
-@dataclass
-class MoveLinearComponent(Component):
-    speed: Tuple[int, int]
-
-
-@dataclass
-class RectComponent(Component):
-    pos: PositionComponent
-    width: int
-    height: int
-
-    @property
-    def rect(self) -> pygame.Rect:
-        return pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
-
-
-@dataclass
-class RectSpriteComponent(Component):
-    surface: pygame.Surface
-    rect: RectComponent
-    color: tuple = (255, 255, 255)
-
-
-@dataclass
-class RectColliderComponent(Component):
-    rect: RectComponent
-    rect_colliders: list | None = None
-
-
 class CustomUpdateComponent(ABC, Component):
     @abstractmethod
     def update(self, dt: float) -> None:
         pass
-
-
-class RenderRectSystem(System):
-    def update(self, dt):
-        for entity, draw_rect in self.get_components(RectSpriteComponent):
-            pygame.draw.rect(draw_rect.surface, draw_rect.color, draw_rect.rect.rect)
-
-
-class RectColliderSystem(System):
-    def update(self, dt):
-        for entity, collider in self.get_components(RectColliderComponent):
-            collider.rect_colliders = []
-            for other_entity, other_collider in self.get_components(
-                RectColliderComponent
-            ):
-                if entity != other_entity and collider.rect.rect.colliderect(
-                    other_collider.rect.rect
-                ):
-                    collider.rect_colliders.append(other_collider.rect)
-
-
-class MoveLinearSystem(System):
-    def update(self, dt):
-        for entity, speed_comp in self.get_components(MoveLinearComponent):
-            pos = self.get_component_safe(entity, PositionComponent)
-            if pos is None:
-                return
-            pos.x += speed_comp.speed[0]
-            pos.y += speed_comp.speed[1]
-
-
-class Asteroid:
-    def __init__(self, x: int, y: int, size: int = enemy_width, speed: int = 2):
-        self.rect: pygame.Rect = pygame.Rect(x, y, size, size)
-        self.speed: int = speed
-
-    def move(self):
-        self.rect.centery += self.speed
-
-    def draw(self):
-        pygame.draw.rect(screen, RED, self.rect)
-
-
-class AsteroidSpawner:
-    def __init__(self, spawn_interval: int, entity_manager: EntityManager):
-        self._spawn_interval = spawn_interval
-        self._last_spawn_time = 0
-        self._entity_manager = entity_manager
-
-    def spawn(self, current_time: int) -> Entity | None:
-        if current_time - self._last_spawn_time < self._spawn_interval:
-            return None
-        x = random.randint(0, WIDTH - enemy_width)
-        new_enemy = self._entity_manager.create_entity()
-        pos_component = PositionComponent(x, 0)
-        rect_component = RectComponent(pos_component, 50, 50)
-        rect_sprite_component = RectSpriteComponent(screen, rect_component, RED)
-        move_linear_component = MoveLinearComponent((0, 2))
-        self._entity_manager.add_components(
-            new_enemy,
-            [
-                pos_component,
-                rect_component,
-                rect_sprite_component,
-                move_linear_component,
-            ],
-        )
-        # enemies.append(new_enemy)
-        self._last_spawn_time = current_time
-
-
-def spawn_enemy():
-    while True:
-        x = random.randint(0, WIDTH - enemy_width)
-        new_enemy = Asteroid(x, 0)
-        if not any(new_enemy.rect.colliderect(enemy) for enemy in enemies):
-            enemies.append(new_enemy)
-            break
 
 
 def draw_player():
@@ -223,15 +113,6 @@ async def main():
     systems_manager = SystemManager(entity_manager)
     systems_manager.add_system(RenderRectSystem(), priority=99)
     systems_manager.add_system(MoveLinearSystem(), priority=0)
-    new_entity = entity_manager.create_entity()
-    pos_component = PositionComponent(100, 100)
-    rect_component = RectComponent(pos_component, 50, 50)
-    entity_manager.add_component(new_entity, pos_component)
-    entity_manager.add_component(new_entity, rect_component)
-    entity_manager.add_component(
-        new_entity, RectSpriteComponent(screen, rect_component, WHITE)
-    )
-    entity_manager.add_component(new_entity, MoveLinearComponent((0, 2)))
 
     asteroid_spawner = AsteroidSpawner(1000, entity_manager)
 
@@ -245,7 +126,8 @@ async def main():
         current_time = pygame.time.get_ticks()
 
         systems_manager.update(0)
-        asteroid_spawner.spawn(current_time)
+        x = random.randint(0, WIDTH - enemy_width)
+        asteroid_spawner.spawn(current_time, (x, 0), screen)
 
         keys = pygame.key.get_pressed()
         if (
