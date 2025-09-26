@@ -14,6 +14,7 @@ from ecs.entity_manager import EntityManager
 from ecs.component import Component
 
 from gamelib.ecs.geometry import MoveLinearSystem, PositionComponent
+from gamelib.ecs.player import PlayerMoveSystem
 from gamelib.ecs.rendering import RenderRectSystem
 from starfighter_game.asteroid import AsteroidSpawner
 from starfighter_game.player import PlayerSpawner
@@ -82,14 +83,10 @@ def draw_powerups():
 
 
 async def main():
-    global player_x, player_y
     score = 0
     running = True
-    player_speed = 5
-    last_space_time = 0
     last_bullet_time = 0
     bullet_interval = 1000  # milliseconds
-    refractory_period = 300  # milliseconds
     powerup_active = False
     powerup_start_time: int = 0
 
@@ -97,6 +94,7 @@ async def main():
     entity_manager = EntityManager()
     systems_manager = SystemManager(entity_manager)
     systems_manager.add_system(RenderRectSystem(), priority=99)
+    systems_manager.add_system(PlayerMoveSystem(), priority=1)
     systems_manager.add_system(MoveLinearSystem(), priority=0)
 
     asteroid_spawner = AsteroidSpawner(1000, entity_manager)
@@ -119,27 +117,9 @@ async def main():
 
         systems_manager.update(0)
 
-        # Spawn player
-
         # Spawn asteroids
         x = random.randint(0, WIDTH - enemy_width)
         asteroid_spawner.spawn(current_time, (x, 0), screen)
-
-        # keys = pygame.key.get_pressed()
-        # if (
-        #     keys[pygame.K_SPACE]
-        #     and (current_time - last_space_time) > refractory_period
-        # ):
-        #     player_speed = -player_speed  # Toggle direction
-        #     last_space_time = current_time
-        # if player_x < 0:
-        #     player_x = 0
-        #     player_speed = abs(player_speed)
-        # elif player_x > WIDTH - player_width:
-        #     player_x = WIDTH - player_width
-        #     player_speed = -abs(player_speed)
-
-        # player_x += player_speed
 
         # Fire a bullet every second
         if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second

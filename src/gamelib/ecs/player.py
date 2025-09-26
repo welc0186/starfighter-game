@@ -33,7 +33,7 @@ class PlayerMoveSystem(System):
             if pos.x < 0:
                 pos.x = 0
                 player.speed = abs(player.speed)
-            elif player.speed > pygame.display.get_window_size()[0] - player.width:
+            elif pos.x > pygame.display.get_window_size()[0] - player.width:
                 pos.x = pygame.display.get_window_size()[0] - player.width
                 player.speed = -abs(player.speed)
 
