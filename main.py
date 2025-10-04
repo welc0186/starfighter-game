@@ -13,6 +13,8 @@ from ecs.entity_manager import EntityManager
 
 from ecs.component import Component
 
+from gamelib.ecs.collision import RectColliderSystem
+from gamelib.ecs.custom import CustomUpdateSystem
 from gamelib.ecs.geometry import MoveLinearSystem, PositionComponent
 from gamelib.ecs.player import PlayerMoveSystem
 from gamelib.ecs.rendering import RenderRectSystem
@@ -55,12 +57,6 @@ powerup_start_time = 0
 clock = pygame.time.Clock()
 
 
-class CustomUpdateComponent(ABC, Component):
-    @abstractmethod
-    def update(self, dt: float) -> None:
-        pass
-
-
 def draw_bullets():
     for bullet in bullets:
         pygame.draw.rect(screen, WHITE, bullet)
@@ -93,9 +89,15 @@ async def main():
     # ECS Setup
     entity_manager = EntityManager()
     systems_manager = SystemManager(entity_manager)
-    systems_manager.add_system(RenderRectSystem(), priority=99)
-    systems_manager.add_system(PlayerMoveSystem(), priority=1)
-    systems_manager.add_system(MoveLinearSystem(), priority=0)
+    systems_manager.add_systems(
+        [
+            (PlayerMoveSystem(), 0),
+            (MoveLinearSystem(), 0),
+            (RectColliderSystem(), 20),
+            (CustomUpdateSystem(), 80),
+            (RenderRectSystem(), 99),
+        ]
+    )
 
     asteroid_spawner = AsteroidSpawner(1000, entity_manager)
     player_spawner = PlayerSpawner(entity_manager)

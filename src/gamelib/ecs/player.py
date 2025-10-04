@@ -8,7 +8,7 @@ from gamelib.ecs.geometry import PositionComponent
 
 
 @dataclass
-class PlayerComponent(Component):
+class PlayerControllerComponent(Component):
     speed: int
     refractory_period: int
     last_space_time: int
@@ -18,7 +18,7 @@ class PlayerComponent(Component):
 
 class PlayerMoveSystem(System):
     def update(self, dt):
-        for entity, player in self.get_components(PlayerComponent):
+        for entity, player in self.get_components(PlayerControllerComponent):
             pos = self.get_component_safe(entity, PositionComponent)
             if pos is None:
                 return
