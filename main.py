@@ -19,7 +19,10 @@ from gamelib.ecs.geometry import MoveLinearSystem, PositionComponent
 from gamelib.ecs.player import PlayerMoveSystem
 from gamelib.ecs.rendering import RenderRectSystem
 from starfighter_game.asteroid import AsteroidSpawner
-from starfighter_game.player import PlayerSpawner
+from starfighter_game.starfighter_player import (
+    PlayerSpawner,
+    StarfighterPlayerComponent,
+)
 
 # Initialize Pygame
 pygame.init()
@@ -78,6 +81,21 @@ def draw_powerups():
         )
 
 
+def spawn_player(
+    player_spawner: PlayerSpawner, entity_manager: EntityManager
+) -> Tuple[PositionComponent, StarfighterPlayerComponent]:
+    player_entity = player_spawner.spawn((WIDTH // 2, HEIGHT - 60), screen)
+    player_pos = entity_manager.get_component_safe(player_entity, PositionComponent)
+    if player_pos is None:
+        raise ValueError("Player position component not found")
+    starfighter_player = entity_manager.get_component_safe(
+        player_entity, StarfighterPlayerComponent
+    )
+    if starfighter_player is None:
+        raise ValueError("StarfighterPlayerComponent not found")
+    return player_pos, starfighter_player
+
+
 async def main():
     score = 0
     running = True
@@ -102,11 +120,7 @@ async def main():
     asteroid_spawner = AsteroidSpawner(1000, entity_manager)
     player_spawner = PlayerSpawner(entity_manager)
 
-    player_entity = player_spawner.spawn((WIDTH // 2, HEIGHT - 60), screen)
-    player_pos = entity_manager.get_component_safe(player_entity, PositionComponent)
-    if player_pos is None:
-        raise ValueError("Player position component not found")
-    player_x, player_y = player_pos.x, player_pos.y
+    player_pos, starfighter_player = spawn_player(player_spawner, entity_manager)
 
     while running:
         screen.fill(BLACK)
@@ -126,8 +140,8 @@ async def main():
         # Fire a bullet every second
         if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second
             bullet = pygame.Rect(
-                player_x + 50 // 2 - bullet_width // 2,
-                player_y,
+                player_pos.x + 50 // 2 - bullet_width // 2,
+                player_pos.y,
                 bullet_width,
                 bullet_height,
             )
@@ -190,23 +204,21 @@ async def main():
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))  # Draw score at the top-left corner
 
-        # Check for collisions between enemies and player
-        # for enemy in enemies:
-        #     if enemy.rect.colliderect(
-        #         pygame.Rect(player_x, player_y, player_width, player_height)
-        #     ):
-        #         # Flash game over screen
-        #         for _ in range(3):  # Flash 3 times
-        #             screen.fill(RED)
-        #             pygame.display.flip()
-        #             await asyncio.sleep(0.5)
-        #             screen.fill(BLACK)
-        #             pygame.display.flip()
-        #             await asyncio.sleep(0.5)
-        #         # Restart the game
-        #         enemies.clear()
-        #         bullets.clear()
-        #         score = 0
+        if starfighter_player.game_over:
+            # Flash game over screen
+            for _ in range(3):  # Flash 3 times
+                screen.fill(RED)
+                pygame.display.flip()
+                await asyncio.sleep(0.5)
+                screen.fill(BLACK)
+                pygame.display.flip()
+                await asyncio.sleep(0.5)
+            # Restart the game
+            entity_manager.clear()
+            score = 0
+            player_pos, starfighter_player = spawn_player(
+                player_spawner, entity_manager
+            )
 
         draw_bullets()
         draw_powerups()

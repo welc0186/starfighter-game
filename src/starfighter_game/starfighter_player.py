@@ -16,10 +16,11 @@ WHITE = (255, 255, 255)
 class StarfighterPlayerComponent(CustomUpdateComponent):
     def __init__(self, rect_collider: RectColliderComponent) -> None:
         self.rect_collider = rect_collider
+        self.game_over = False
 
     def update(self, dt: float) -> None:
         if len(self.rect_collider.colliders) > 0:
-            print("Player collided with something!")
+            self.game_over = True
 
 
 class PlayerSpawner:
