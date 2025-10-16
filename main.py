@@ -19,6 +19,7 @@ from gamelib.ecs.geometry import MoveLinearSystem, PositionComponent
 from gamelib.ecs.player import PlayerMoveSystem
 from gamelib.ecs.rendering import RenderRectSystem
 from starfighter_game.asteroid import AsteroidSpawner
+from starfighter_game.projectile import EntitySpawner, Projectile
 from starfighter_game.starfighter_player import (
     PlayerSpawner,
     StarfighterPlayerComponent,
@@ -119,6 +120,7 @@ async def main():
 
     asteroid_spawner = AsteroidSpawner(1000, entity_manager)
     player_spawner = PlayerSpawner(entity_manager)
+    entity_spawner = EntitySpawner(entity_manager)
 
     player_pos, starfighter_player = spawn_player(player_spawner, entity_manager)
 
@@ -139,20 +141,17 @@ async def main():
 
         # Fire a bullet every second
         if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second
-            bullet = pygame.Rect(
-                player_pos.x + 50 // 2 - bullet_width // 2,
-                player_pos.y,
-                bullet_width,
-                bullet_height,
+            entity_spawner.spawn(
+                (player_pos.x, player_pos.y),
+                Projectile(screen).components,
             )
-            bullets.append(bullet)
             last_bullet_time = current_time
 
         # Update bullets
-        for bullet in bullets:
-            bullet.y -= bullet_speed
-            if bullet.y < 0:
-                bullets.remove(bullet)
+        # for bullet in bullets:
+        #     bullet.y -= bullet_speed
+        #     if bullet.y < 0:
+        #         bullets.remove(bullet)
 
         # Update power-ups
         if random.randint(1, 300) == 1:  # Spawn a power-up randomly
@@ -189,15 +188,6 @@ async def main():
         #     )
         #     bullets.append(bullet)
         #     last_bullet_time = current_time
-        # # Collision detection
-
-        for bullet in bullets:
-            for enemy in enemies:
-                if bullet.colliderect(enemy.rect):
-                    bullets.remove(bullet)
-                    enemies.remove(enemy)
-                    score += 1  # Increment score
-                    break
 
         # Display score
         font = pygame.font.Font(None, 36)
@@ -220,7 +210,7 @@ async def main():
                 player_spawner, entity_manager
             )
 
-        draw_bullets()
+        # draw_bullets()
         draw_powerups()
 
         pygame.display.flip()

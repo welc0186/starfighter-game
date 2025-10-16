@@ -21,15 +21,3 @@ class RectColliderSystem(System):
                     rect_component.rect
                 ):
                     collider.colliders.append(rect_component)
-
-    def components_from_rect(self, rect: RectComponent) -> list[Component]:
-        result = []
-        if not self._is_entity_manager(self.entity_manager):
-            return result
-        entity = self.entity_manager.entity_for_component(rect)
-        if entity is None:
-            return result
-        for component in self.entity_manager.components_for_entity(entity):
-            if component is not rect:
-                result.append(component)
-        return result

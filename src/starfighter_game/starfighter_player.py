@@ -7,6 +7,7 @@ from gamelib.ecs.custom import CustomUpdateComponent
 from gamelib.ecs.geometry import PositionComponent, RectComponent
 from gamelib.ecs.rendering import RectSpriteComponent
 from gamelib.ecs.player import PlayerControllerComponent
+from starfighter_game.asteroid import AsteroidComponent
 
 P_WIDTH = 50
 P_HEIGHT = 50
@@ -14,13 +15,22 @@ WHITE = (255, 255, 255)
 
 
 class StarfighterPlayerComponent(CustomUpdateComponent):
-    def __init__(self, rect_collider: RectColliderComponent) -> None:
+    def __init__(
+        self, rect_collider: RectColliderComponent, entity_manager: EntityManager
+    ) -> None:
         self.rect_collider = rect_collider
         self.game_over = False
+        self.entity_manager = entity_manager
 
     def update(self, dt: float) -> None:
-        if len(self.rect_collider.colliders) > 0:
-            self.game_over = True
+        if len(self.rect_collider.colliders) == 0:
+            return
+        for collider in self.rect_collider.colliders:
+            entity = self.entity_manager.entity_for_component(collider)
+            if entity is None:
+                continue
+            if self.entity_manager.has_component(entity, AsteroidComponent):
+                self.game_over = True
 
 
 class PlayerSpawner:
@@ -42,7 +52,7 @@ class PlayerSpawner:
         rect_sprite_component = RectSpriteComponent(screen, rect_component, WHITE)
         rect_collider_component = RectColliderComponent(rect_component)
         starfighter_player_component = StarfighterPlayerComponent(
-            rect_collider_component
+            rect_collider_component, self._entity_manager
         )
         self._entity_manager.add_components(
             new_player,

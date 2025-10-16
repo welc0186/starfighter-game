@@ -3,6 +3,7 @@ from typing import Tuple
 from dataclasses import dataclass
 from ecs.component import Component
 from ecs.system import System
+from ecs.entity_manager import EntityManager
 import pygame
 
 
