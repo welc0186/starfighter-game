@@ -13,6 +13,18 @@ files = [
 ]
 
 [[package]]
+name = "esper"
+version = "3.4"
+description = "esper is a lightweight Entity System (ECS) for Python, with a focus on performance"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "esper-3.4-py3-none-any.whl", hash = "sha256:5e4e41fdde1ff104eacf6cb9638272399b2ca5b7d1c3845cf9047d214c5cbfa3"},
+    {file = "esper-3.4.tar.gz", hash = "sha256:56ac0f4886c2c07f3ac093922d1424405614ad30afd2847fe6fa85a3a0ec5b81"},
+]
+
+[[package]]
 name = "pygame"
 version = "2.6.1"
 description = "Python Game Development"
@@ -100,4 +112,4 @@ sim = ["aioconsole", "aiohttp", "asyncio-socks-server"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "ed48d305596951586d37803ae83faa5d0f2538e6aae3b6d5d80c751e08e964e4"
+content-hash = "d9925eff4367bf08c202a3ba335143edb975ed4655512ca163e63d5399b60b6d"

@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 
-from ecs.component import Component
-from ecs.system import System
+from esper import Processor
+import esper
 
 
-class CustomUpdateComponent(ABC, Component):
+class CustomProcessComponent(ABC):
     @abstractmethod
-    def update(self, dt: float) -> None:
+    def process(self) -> None:
         pass
 
 
-class CustomUpdateSystem(System):
-    def update(self, dt: float) -> None:
-        for entity, custom_component in self.get_components(CustomUpdateComponent):
-            custom_component.update(dt)
+class CustomUpdateProcessor(Processor):
+    def process(self) -> None:
+        for entity, custom_component in esper.get_component(CustomProcessComponent):
+            custom_component.process()

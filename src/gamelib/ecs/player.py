@@ -2,13 +2,15 @@ from dataclasses import dataclass
 
 from ecs.component import Component
 from ecs.system import System
+from esper import Processor
+import esper
 import pygame
 
 from gamelib.ecs.geometry import PositionComponent
 
 
 @dataclass
-class PlayerControllerComponent(Component):
+class PlayerControllerComponent:
     speed: int
     refractory_period: int
     last_space_time: int
@@ -16,12 +18,12 @@ class PlayerControllerComponent(Component):
     height: int
 
 
-class PlayerMoveSystem(System):
-    def update(self, dt):
-        for entity, player in self.get_components(PlayerControllerComponent):
-            pos = self.get_component_safe(entity, PositionComponent)
-            if pos is None:
-                return
+class PlayerMoveProcessor(Processor):
+    def process(self):
+        for entity, player in esper.get_component(PlayerControllerComponent):
+            if not esper.has_component(entity, PositionComponent):
+                continue
+            pos = esper.component_for_entity(entity, PositionComponent)
             keys = pygame.key.get_pressed()
             current_time = pygame.time.get_ticks()
             if (

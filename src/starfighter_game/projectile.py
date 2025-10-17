@@ -1,14 +1,11 @@
-from dataclasses import dataclass
-from typing import Tuple
-from ecs.component import Component
-from ecs.system import System
-from ecs.entity_manager import EntityManager
+from typing import Any, Tuple
+import esper
 import pygame
-from gamelib.ecs.geometry import MoveLinearComponent, PositionComponent, RectComponent
+from gamelib.ecs.geometry import VelocityComponent, PositionComponent, RectComponent
 from gamelib.ecs.rendering import RectSpriteComponent
 
 
-class ProjectileComponent(Component):
+class ProjectileComponent:
     pass
 
 
@@ -20,7 +17,7 @@ class Projectile:
         self.screen = screen
 
     @property
-    def components(self) -> list[Component]:
+    def components(self) -> list[Any]:
         pos = PositionComponent(0, 0)
         rect = RectComponent(pos, 10, 10)
         return [
@@ -28,21 +25,18 @@ class Projectile:
             rect,
             ProjectileComponent(),
             RectSpriteComponent(self.screen, rect, WHITE),
-            MoveLinearComponent((0, -5)),
+            VelocityComponent((0, -5)),
         ]
 
 
 class EntitySpawner:
-    def __init__(self, entity_manager: EntityManager):
-        self._entity_manager = entity_manager
 
     # TO-DO: Add necessary systems to system manager
-    def spawn(self, position: Tuple[int, int], components: list[Component]) -> None:
-        new_entity = self._entity_manager.create_entity()
-        self._entity_manager.add_components(new_entity, components)
-        pos = self._entity_manager.get_component_safe(new_entity, PositionComponent)
-        if pos is None:
-            pos = PositionComponent(position[0], position[1])
-            self._entity_manager.add_component(new_entity, pos)
-        pos.x = position[0]
-        pos.y = position[1]
+    def spawn(self, position: Tuple[int, int], components: list[Any]) -> None:
+        new_entity = esper.create_entity(components)
+        if esper.has_component(new_entity, PositionComponent):
+            pos = esper.component_for_entity(new_entity, PositionComponent)
+            pos.x = position[0]
+            pos.y = position[1]
+        else:
+            esper.add_component(new_entity, PositionComponent(position[0], position[1]))

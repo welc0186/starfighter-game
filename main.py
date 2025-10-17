@@ -13,11 +13,12 @@ from ecs.entity_manager import EntityManager
 
 from ecs.component import Component
 
-from gamelib.ecs.collision import RectColliderSystem
-from gamelib.ecs.custom import CustomUpdateSystem
-from gamelib.ecs.geometry import MoveLinearSystem, PositionComponent
-from gamelib.ecs.player import PlayerMoveSystem
-from gamelib.ecs.rendering import RenderRectSystem
+from gamelib.ecs.collision import RectColliderProcessor
+from gamelib.ecs.custom import CustomUpdateProcessor
+from gamelib.ecs.geometry import MoveProcessor, PositionComponent
+from gamelib.ecs.player import PlayerMoveProcessor
+from gamelib.ecs.rendering import RenderRectProcessor
+import esper
 from starfighter_game.asteroid import AsteroidSpawner
 from starfighter_game.projectile import EntitySpawner, Projectile
 from starfighter_game.starfighter_player import (
@@ -83,15 +84,13 @@ def draw_powerups():
 
 
 def spawn_player(
-    player_spawner: PlayerSpawner, entity_manager: EntityManager
+    player_spawner: PlayerSpawner,
 ) -> Tuple[PositionComponent, StarfighterPlayerComponent]:
     player_entity = player_spawner.spawn((WIDTH // 2, HEIGHT - 60), screen)
-    player_pos = entity_manager.get_component_safe(player_entity, PositionComponent)
+    player_pos = esper.try_component(player_entity, PositionComponent)
     if player_pos is None:
         raise ValueError("Player position component not found")
-    starfighter_player = entity_manager.get_component_safe(
-        player_entity, StarfighterPlayerComponent
-    )
+    starfighter_player = esper.try_component(player_entity, StarfighterPlayerComponent)
     if starfighter_player is None:
         raise ValueError("StarfighterPlayerComponent not found")
     return player_pos, starfighter_player
@@ -106,23 +105,17 @@ async def main():
     powerup_start_time: int = 0
 
     # ECS Setup
-    entity_manager = EntityManager()
-    systems_manager = SystemManager(entity_manager)
-    systems_manager.add_systems(
-        [
-            (PlayerMoveSystem(), 0),
-            (MoveLinearSystem(), 0),
-            (RectColliderSystem(), 20),
-            (CustomUpdateSystem(), 80),
-            (RenderRectSystem(), 99),
-        ]
-    )
+    esper.add_processor(PlayerMoveProcessor(), priority=99)
+    esper.add_processor(MoveProcessor(), priority=98)
+    esper.add_processor(RectColliderProcessor(), priority=90)
+    esper.add_processor(CustomUpdateProcessor(), priority=80)
+    esper.add_processor(RenderRectProcessor())
 
-    asteroid_spawner = AsteroidSpawner(1000, entity_manager)
-    player_spawner = PlayerSpawner(entity_manager)
-    entity_spawner = EntitySpawner(entity_manager)
+    asteroid_spawner = AsteroidSpawner(1000)
+    player_spawner = PlayerSpawner()
+    entity_spawner = EntitySpawner()
 
-    player_pos, starfighter_player = spawn_player(player_spawner, entity_manager)
+    player_pos, starfighter_player = spawn_player(player_spawner)
 
     while running:
         screen.fill(BLACK)
@@ -133,7 +126,7 @@ async def main():
 
         current_time = pygame.time.get_ticks()
 
-        systems_manager.update(0)
+        esper.process()
 
         # Spawn asteroids
         x = random.randint(0, WIDTH - enemy_width)
@@ -204,11 +197,9 @@ async def main():
                 pygame.display.flip()
                 await asyncio.sleep(0.5)
             # Restart the game
-            entity_manager.clear()
+            esper.clear_database()
             score = 0
-            player_pos, starfighter_player = spawn_player(
-                player_spawner, entity_manager
-            )
+            player_pos, starfighter_player = spawn_player(player_spawner)
 
         # draw_bullets()
         draw_powerups()
