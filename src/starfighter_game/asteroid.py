@@ -1,8 +1,5 @@
 import random
 from typing import Tuple
-from ecs.entity import Entity
-from ecs.entity_manager import EntityManager
-from ecs.component import Component
 import pygame
 import esper
 

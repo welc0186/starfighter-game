@@ -5,14 +5,6 @@ from typing import Tuple
 import pygame
 import random
 
-from ecs.system import System
-from ecs.system_manager import SystemManager
-
-from ecs.entity import Entity
-from ecs.entity_manager import EntityManager
-
-from ecs.component import Component
-
 from gamelib.ecs.collision import RectColliderProcessor
 from gamelib.ecs.custom import CustomUpdateProcessor
 from gamelib.ecs.geometry import MoveProcessor, PositionComponent

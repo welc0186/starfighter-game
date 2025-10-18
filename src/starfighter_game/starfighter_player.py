@@ -1,6 +1,4 @@
 from typing import Tuple
-from ecs.entity_manager import EntityManager
-from ecs.entity import Entity
 import esper
 import pygame
 from gamelib.ecs.collision import RectColliderComponent

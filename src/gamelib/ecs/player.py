@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from ecs.component import Component
-from ecs.system import System
 from esper import Processor
 import esper
 import pygame

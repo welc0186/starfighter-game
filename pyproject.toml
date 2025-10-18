@@ -15,8 +15,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "starfighter_game", from = "src"},
-            {include = "ecs", from = "src/ecs"}]
+packages = [{include = "starfighter_game", from = "src"}]
 
 
 [build-system]
