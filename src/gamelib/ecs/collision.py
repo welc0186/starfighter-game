@@ -7,8 +7,10 @@ from gamelib.ecs.geometry import RectComponent
 
 
 class RectColliderComponent:
-    def __init__(self, rect_component: RectComponent) -> None:
+    def __init__(self, rect_component: RectComponent, name: str, collides_with: list[str] = []) -> None:
         self.rect_component = rect_component
+        self.name = name
+        self.collides_with = collides_with
         self.colliders: list[RectComponent] = []
 
 
