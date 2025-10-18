@@ -126,9 +126,9 @@ async def main():
 
         # Fire a bullet every second
         if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second
-            entity_spawner.spawn(
+            pojectile = entity_spawner.spawn(
                 (player_pos.x, player_pos.y),
-                Projectile(screen).components,
+                Projectile(screen).get_components(),
             )
             last_bullet_time = current_time
 

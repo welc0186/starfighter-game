@@ -25,7 +25,17 @@ class Projectile:
             rect,
             ProjectileComponent(),
             RectSpriteComponent(self.screen, rect, WHITE),
-            VelocityComponent((0, -5)),
+            VelocityComponent((0, 5)),
+        ]
+    
+    def get_components(self) -> list[Any]:
+        pos = PositionComponent(0,0)
+        rect = RectComponent(pos, 10, 10)
+        projectile = ProjectileComponent()
+        rect_sprite = RectSpriteComponent(self.screen, rect, WHITE)
+        veloctiy = VelocityComponent((0,-5))
+        return [
+            pos, rect, projectile, rect_sprite, veloctiy
         ]
 
 
@@ -33,7 +43,10 @@ class EntitySpawner:
 
     # TO-DO: Add necessary systems to system manager
     def spawn(self, position: Tuple[int, int], components: list[Any]) -> None:
-        new_entity = esper.create_entity(components)
+        new_entity = esper.create_entity()
+        # Can't specify components within create_entity() for some reason?
+        for component in components:
+            esper.add_component(new_entity, component)
         if esper.has_component(new_entity, PositionComponent):
             pos = esper.component_for_entity(new_entity, PositionComponent)
             pos.x = position[0]
