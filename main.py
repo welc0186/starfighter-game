@@ -190,6 +190,7 @@ async def main():
                 await asyncio.sleep(0.5)
             # Restart the game
             esper.clear_database()
+            player_spawner.game_over = False
             score = 0
             player_pos, starfighter_player = spawn_player(player_spawner)
 

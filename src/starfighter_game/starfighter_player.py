@@ -28,7 +28,7 @@ class PlayerSpawner:
     def spawn(self, position: Tuple[int, int], screen: pygame.Surface) -> int:
         pos_component = PositionComponent(position[0], position[1])
         player_component = PlayerControllerComponent(
-            speed=5,
+            base_speed=5,
             refractory_period=300,
             last_space_time=0,
             width=P_WIDTH,

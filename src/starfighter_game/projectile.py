@@ -2,7 +2,7 @@ from typing import Any, Tuple
 import esper
 import pygame
 from gamelib.ecs.collision import ColliderComponent
-from gamelib.ecs.geometry import VelocityComponent, PositionComponent, RectComponent
+from gamelib.ecs.geometry import VelocityComponent, PositionComponent
 from gamelib.ecs.rendering import RectSpriteComponent
 
 

@@ -9,11 +9,12 @@ from gamelib.ecs.geometry import PositionComponent
 
 @dataclass
 class PlayerControllerComponent:
-    speed: int
+    base_speed: int
     refractory_period: int
     last_space_time: int
     width: int
     height: int
+    speed_multiplier: int = 1
 
 
 class PlayerMoveProcessor(Processor):
@@ -28,13 +29,13 @@ class PlayerMoveProcessor(Processor):
                 keys[pygame.K_SPACE]
                 and (current_time - player.last_space_time) > player.refractory_period
             ):
-                player.speed = -player.speed
+                player.base_speed = -player.base_speed
                 player.last_space_time = current_time
             if pos.x < 0:
                 pos.x = 0
-                player.speed = abs(player.speed)
+                player.base_speed = abs(player.base_speed)
             elif pos.x > pygame.display.get_window_size()[0] - player.width:
                 pos.x = pygame.display.get_window_size()[0] - player.width
-                player.speed = -abs(player.speed)
+                player.base_speed = -abs(player.base_speed)
 
-            pos.x += player.speed
+            pos.x += player.base_speed

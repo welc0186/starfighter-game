@@ -14,7 +14,8 @@ class PositionComponent:
 
 @dataclass
 class VelocityComponent:
-    speed: Tuple[int, int]
+    base_speed: Tuple[int, int]
+    multiplier: int = 1
 
 
 @dataclass
@@ -34,5 +35,5 @@ class MoveProcessor(Processor):
             pos = esper.try_component(entity, PositionComponent)
             if pos:
                 # TO-DO: Factor for dt
-                pos.x += speed_comp.speed[0]
-                pos.y += speed_comp.speed[1]
+                pos.x += speed_comp.base_speed[0]
+                pos.y += speed_comp.base_speed[1]
