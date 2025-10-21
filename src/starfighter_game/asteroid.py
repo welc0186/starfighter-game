@@ -1,17 +1,14 @@
-import random
 from typing import Tuple
 import pygame
 import esper
 
-from gamelib.ecs.collision import RectColliderComponent
+from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.geometry import VelocityComponent, PositionComponent, RectComponent
 from gamelib.ecs.rendering import RectSpriteComponent
 
 RED = (255, 0, 0)
-
-
-class AsteroidComponent:
-    pass
+ASTEROID_W = 50
+ASTEROID_H = 50
 
 
 class AsteroidSpawner:
@@ -19,21 +16,31 @@ class AsteroidSpawner:
         self._spawn_interval = spawn_interval
         self._last_spawn_time = 0
 
+    def on_asteroid_collided(self, entity, other_entity, tags):
+        if "projectile" in tags:
+            esper.delete_entity(entity)
+
     def spawn(
         self, current_time: int, position: Tuple[int, int], screen: pygame.Surface
     ) -> None:
         if current_time - self._last_spawn_time < self._spawn_interval:
             return
+
         pos_component = PositionComponent(position[0], position[1])
-        rect_component = RectComponent(pos_component, 50, 50)
-        rect_sprite_component = RectSpriteComponent(screen, rect_component, RED)
+        rect_sprite_component = RectSpriteComponent(
+            screen, pygame.Rect(position[0], position[1], ASTEROID_W, ASTEROID_H), RED
+        )
         move_linear_component = VelocityComponent((0, 2))
-        asteroid_component = AsteroidComponent()
+        collider_component = ColliderComponent(
+            ASTEROID_W,
+            ASTEROID_H,
+            tags={"enemy"},
+            on_collision=self.on_asteroid_collided,
+        )
         esper.create_entity(
             pos_component,
-            rect_component,
             rect_sprite_component,
             move_linear_component,
-            asteroid_component,
+            collider_component,
         )
         self._last_spawn_time = current_time

@@ -5,7 +5,7 @@ from typing import Tuple
 import pygame
 import random
 
-from gamelib.ecs.collision import RectColliderProcessor
+from gamelib.ecs.collision import CollisionProcessor
 from gamelib.ecs.custom import CustomUpdateProcessor
 from gamelib.ecs.geometry import MoveProcessor, PositionComponent
 from gamelib.ecs.player import PlayerMoveProcessor
@@ -99,7 +99,7 @@ async def main():
     # ECS Setup
     esper.add_processor(PlayerMoveProcessor(), priority=99)
     esper.add_processor(MoveProcessor(), priority=98)
-    esper.add_processor(RectColliderProcessor(), priority=90)
+    esper.add_processor(CollisionProcessor(), priority=90)
     esper.add_processor(CustomUpdateProcessor(), priority=80)
     esper.add_processor(RenderRectProcessor())
 
@@ -128,7 +128,7 @@ async def main():
         if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second
             pojectile = entity_spawner.spawn(
                 (player_pos.x, player_pos.y),
-                Projectile(screen).get_components(),
+                Projectile(screen).components,
             )
             last_bullet_time = current_time
 
@@ -179,7 +179,7 @@ async def main():
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))  # Draw score at the top-left corner
 
-        if starfighter_player.game_over:
+        if player_spawner.game_over:
             # Flash game over screen
             for _ in range(3):  # Flash 3 times
                 screen.fill(RED)

@@ -1,34 +1,29 @@
-from typing import Tuple
+from typing import Callable, Set, Tuple
 import esper
 import pygame
-from gamelib.ecs.collision import RectColliderComponent
-from gamelib.ecs.custom import CustomProcessComponent
+from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.geometry import PositionComponent, RectComponent
 from gamelib.ecs.rendering import RectSpriteComponent
 from gamelib.ecs.player import PlayerControllerComponent
-from starfighter_game.asteroid import AsteroidComponent
 
 P_WIDTH = 50
 P_HEIGHT = 50
 WHITE = (255, 255, 255)
 
 
-class StarfighterPlayerComponent(CustomProcessComponent):
-    def __init__(self, rect_collider: RectColliderComponent) -> None:
-        self.rect_collider = rect_collider
+class StarfighterPlayerComponent:
+    def __init__(self) -> None:
         self.game_over = False
-
-    def process(self) -> None:
-        if len(self.rect_collider.colliders) == 0:
-            return
-        for asteroid_entity, _ in esper.get_component(AsteroidComponent):
-            asteroid_rect = esper.try_component(asteroid_entity, RectComponent)
-            if asteroid_rect in self.rect_collider.colliders:
-                self.game_over = True
-                return
 
 
 class PlayerSpawner:
+
+    def __init__(self) -> None:
+        self.game_over = False
+
+    def on_player_collided(self, entity: int, other_entity: int, tags: Set[str]):
+        if "enemy" in tags:
+            self.game_over = True
 
     def spawn(self, position: Tuple[int, int], screen: pygame.Surface) -> int:
         pos_component = PositionComponent(position[0], position[1])
@@ -39,15 +34,19 @@ class PlayerSpawner:
             width=P_WIDTH,
             height=P_HEIGHT,
         )
-        rect_component = RectComponent(pos_component, P_WIDTH, P_HEIGHT)
-        rect_sprite_component = RectSpriteComponent(screen, rect_component, WHITE)
-        rect_collider_component = RectColliderComponent(rect_component)
-        starfighter_player_component = StarfighterPlayerComponent(
-            rect_collider_component
+        rect_sprite_component = RectSpriteComponent(
+            screen, pygame.Rect(position[0], position[1], P_WIDTH, P_HEIGHT), WHITE
+        )
+        starfighter_player_component = StarfighterPlayerComponent()
+        rect_collider_component = ColliderComponent(
+            P_WIDTH,
+            P_HEIGHT,
+            tags={"player"},
+            ignore_tags={"projectile"},
+            on_collision=self.on_player_collided,
         )
         new_player = esper.create_entity(
             pos_component,
-            rect_component,
             rect_sprite_component,
             player_component,
             rect_collider_component,
