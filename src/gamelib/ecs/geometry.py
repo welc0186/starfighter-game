@@ -15,7 +15,7 @@ class PositionComponent:
 @dataclass
 class VelocityComponent:
     base_speed: Tuple[int, int]
-    multiplier: int = 1
+    multiplier: float = 1
 
 
 @dataclass
@@ -30,7 +30,7 @@ class RectComponent:
 
 
 class MoveProcessor(Processor):
-    def process(self):
+    def process(self, dt):
         for entity, speed_comp in esper.get_component(VelocityComponent):
             pos = esper.try_component(entity, PositionComponent)
             if pos:

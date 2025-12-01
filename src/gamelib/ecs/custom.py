@@ -6,8 +6,6 @@ from esper import Processor
 from gamelib.ecs.utils import get_components_with_subclasses
 
 
-
-
 class CustomProcessComponent(ABC):
     @abstractmethod
     def process(self) -> None:
@@ -15,6 +13,8 @@ class CustomProcessComponent(ABC):
 
 
 class CustomUpdateProcessor(Processor):
-    def process(self) -> None:
-        for entity, (custom_component,) in get_components_with_subclasses(CustomProcessComponent):
+    def process(self, dt) -> None:
+        for entity, (custom_component,) in get_components_with_subclasses(
+            CustomProcessComponent
+        ):
             custom_component.process()

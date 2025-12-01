@@ -15,7 +15,7 @@ class RectSpriteComponent:
 
 
 class RenderRectProcessor(Processor):
-    def process(self):
+    def process(self, dt):
         for entity, (position, rect_sprite) in esper.get_components(
             PositionComponent, RectSpriteComponent
         ):

@@ -1,14 +1,16 @@
 from typing import Any
+import esper
 import pygame
 
 from gamelib.ecs.geometry import PositionComponent, VelocityComponent
 from gamelib.ecs.collision import ColliderComponent
+from gamelib.ecs.modifiers.modifier import add_modifier
+from gamelib.ecs.modifiers.speed_modifier import SpeedModifier
 from gamelib.ecs.rendering import RectSpriteComponent
-
 
 SPU_W = 50
 SPU_H = 50
-SPU_SPEED = -5
+SPU_SPEED = 5
 
 YELLOW = (255, 255, 0)
 
@@ -17,6 +19,10 @@ class SpeedPowerUp:
     def __init__(self, screen: pygame.Surface):
         self.screen = screen
         self.rect = pygame.Rect(0, 0, SPU_W, SPU_H)
+
+    def on_collided(self, entity, other_entity, tags):
+        if "player" in tags:
+            add_modifier(other_entity, SpeedModifier())
 
     @property
     def components(self) -> list[Any]:
@@ -27,7 +33,7 @@ class SpeedPowerUp:
             ColliderComponent(
                 SPU_W,
                 SPU_H,
-                tags={"projectile"},
-                ignore_tags={"player"},
+                on_collision=self.on_collided,
+                ignore_tags={"enemy", "projectile"},
             ),
         ]

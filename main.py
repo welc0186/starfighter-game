@@ -8,10 +8,12 @@ import random
 from gamelib.ecs.collision import CollisionProcessor
 from gamelib.ecs.custom import CustomUpdateProcessor
 from gamelib.ecs.geometry import MoveProcessor, PositionComponent
+from gamelib.ecs.modifiers.modifier import ModifierProcessor
 from gamelib.ecs.player import PlayerMoveProcessor
 from gamelib.ecs.rendering import RenderRectProcessor
 import esper
 from starfighter_game.asteroid import AsteroidSpawner
+from starfighter_game.powerup import SpeedPowerUp
 from starfighter_game.projectile import EntitySpawner, Projectile
 from starfighter_game.starfighter_player import (
     PlayerSpawner,
@@ -102,6 +104,7 @@ async def main():
     esper.add_processor(CollisionProcessor(), priority=90)
     esper.add_processor(CustomUpdateProcessor(), priority=80)
     esper.add_processor(RenderRectProcessor())
+    esper.add_processor(ModifierProcessor())
 
     asteroid_spawner = AsteroidSpawner(1000)
     player_spawner = PlayerSpawner()
@@ -117,8 +120,9 @@ async def main():
                 running = False
 
         current_time = pygame.time.get_ticks()
+        dt = clock.tick(60) / 1000.0
 
-        esper.process()
+        esper.process(dt)
 
         # Spawn asteroids
         x = random.randint(0, WIDTH - enemy_width)
@@ -139,12 +143,14 @@ async def main():
         #         bullets.remove(bullet)
 
         # Update power-ups
-        if random.randint(1, 300) == 1:  # Spawn a power-up randomly
-            spawn_powerup()
-        for powerup in powerups[:]:
-            powerup.y += powerup_speed
-            if powerup.y > HEIGHT:
-                powerups.remove(powerup)
+        if random.randint(1, 200) == 1:  # Spawn a power-up randomly
+            x = random.randint(powerup_radius, WIDTH - powerup_radius)
+            entity_spawner.spawn((x, 0), SpeedPowerUp(screen).components)
+            # spawn_powerup()
+        # for powerup in powerups[:]:
+        #     powerup.y += powerup_speed
+        #     if powerup.y > HEIGHT:
+        #         powerups.remove(powerup)
 
         # Check for collisions between player and power-ups
         # player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
@@ -155,13 +161,13 @@ async def main():
         #         powerup_start_time = current_time
 
         # Handle power-up effect duration
-        if powerup_active:
-            bullet_interval = 500  # Fire bullets every 0.5 seconds
-            if current_time - powerup_start_time > powerup_duration:
-                powerup_active = False
-                bullet_interval = 1000  # Reset to normal firing rate
-        else:
-            bullet_interval = 1000  # Normal firing rate
+        # if powerup_active:
+        #     bullet_interval = 500  # Fire bullets every 0.5 seconds
+        #     if current_time - powerup_start_time > powerup_duration:
+        #         powerup_active = False
+        #         bullet_interval = 1000  # Reset to normal firing rate
+        # else:
+        #     bullet_interval = 1000  # Normal firing rate
 
         # Fire a bullet based on current bullet_interval
         # if current_time - last_bullet_time > bullet_interval:
@@ -195,10 +201,10 @@ async def main():
             player_pos, starfighter_player = spawn_player(player_spawner)
 
         # draw_bullets()
-        draw_powerups()
+        # draw_powerups()
 
         pygame.display.flip()
-        clock.tick(60)
+        # clock.tick(60)
         await asyncio.sleep(0)
 
 

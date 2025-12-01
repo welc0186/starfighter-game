@@ -18,7 +18,7 @@ class PlayerControllerComponent:
 
 
 class PlayerMoveProcessor(Processor):
-    def process(self):
+    def process(self, dt):
         for entity, player in esper.get_component(PlayerControllerComponent):
             if not esper.has_component(entity, PositionComponent):
                 continue
