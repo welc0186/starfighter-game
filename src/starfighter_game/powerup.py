@@ -23,6 +23,7 @@ class SpeedPowerUp:
     def on_collided(self, entity, other_entity, tags):
         if "player" in tags:
             add_modifier(other_entity, SpeedModifier())
+            esper.delete_entity(entity)
 
     @property
     def components(self) -> list[Any]:
