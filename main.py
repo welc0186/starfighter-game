@@ -56,27 +56,6 @@ powerup_start_time = 0
 clock = pygame.time.Clock()
 
 
-def draw_bullets():
-    for bullet in bullets:
-        pygame.draw.rect(screen, WHITE, bullet)
-
-
-def spawn_powerup():
-    x = random.randint(powerup_radius, WIDTH - powerup_radius)
-    new_powerup = pygame.Rect(x, 0, powerup_radius * 2, powerup_radius * 2)
-    powerups.append(new_powerup)
-
-
-def draw_powerups():
-    for powerup in powerups:
-        pygame.draw.circle(
-            screen,
-            (255, 255, 0),
-            (powerup.x + powerup_radius, powerup.y + powerup_radius),
-            powerup_radius,
-        )
-
-
 def spawn_player(
     player_spawner: PlayerSpawner,
 ) -> Tuple[PositionComponent, StarfighterPlayerComponent]:
@@ -136,49 +115,10 @@ async def main():
             )
             last_bullet_time = current_time
 
-        # Update bullets
-        # for bullet in bullets:
-        #     bullet.y -= bullet_speed
-        #     if bullet.y < 0:
-        #         bullets.remove(bullet)
-
-        # Update power-ups
-        if random.randint(1, 200) == 1:  # Spawn a power-up randomly
+        # Spawn a power-up randomly
+        if random.randint(1, 200) == 1:
             x = random.randint(powerup_radius, WIDTH - powerup_radius)
             entity_spawner.spawn((x, 0), SpeedPowerUp(screen).components)
-            # spawn_powerup()
-        # for powerup in powerups[:]:
-        #     powerup.y += powerup_speed
-        #     if powerup.y > HEIGHT:
-        #         powerups.remove(powerup)
-
-        # Check for collisions between player and power-ups
-        # player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
-        # for powerup in powerups[:]:
-        #     if player_rect.colliderect(powerup):
-        #         powerups.remove(powerup)
-        #         powerup_active = True
-        #         powerup_start_time = current_time
-
-        # Handle power-up effect duration
-        # if powerup_active:
-        #     bullet_interval = 500  # Fire bullets every 0.5 seconds
-        #     if current_time - powerup_start_time > powerup_duration:
-        #         powerup_active = False
-        #         bullet_interval = 1000  # Reset to normal firing rate
-        # else:
-        #     bullet_interval = 1000  # Normal firing rate
-
-        # Fire a bullet based on current bullet_interval
-        # if current_time - last_bullet_time > bullet_interval:
-        #     bullet = pygame.Rect(
-        #         player_x + player_width // 2 - bullet_width // 2,
-        #         player_y,
-        #         bullet_width,
-        #         bullet_height,
-        #     )
-        #     bullets.append(bullet)
-        #     last_bullet_time = current_time
 
         # Display score
         font = pygame.font.Font(None, 36)
@@ -199,9 +139,6 @@ async def main():
             player_spawner.game_over = False
             score = 0
             player_pos, starfighter_player = spawn_player(player_spawner)
-
-        # draw_bullets()
-        # draw_powerups()
 
         pygame.display.flip()
         # clock.tick(60)
