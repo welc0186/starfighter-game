@@ -13,6 +13,24 @@ files = [
 ]
 
 [[package]]
+name = "gamelib"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = ">=3.13"
+groups = ["main"]
+files = []
+develop = true
+
+[package.dependencies]
+esper = ">=3.4,<4.0"
+pygame = ">=2.6.1,<3.0.0"
+
+[package.source]
+type = "directory"
+url = "../gamelib"
+
+[[package]]
 name = "pygame"
 version = "2.6.1"
 description = "Python Game Development"
@@ -100,4 +118,4 @@ sim = ["aioconsole", "aiohttp", "asyncio-socks-server"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "998ae6f939a07de7dff07d1ec1f4e96ee8e9d956045d059e11cccd040de86630"
+content-hash = "01c7ad2de83ae0c6455de768d82f779f1aa01fbdf52fbc81e8ab2d919bfbed49"
