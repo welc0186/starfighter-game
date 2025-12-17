@@ -4,6 +4,7 @@ import pygame
 from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.geometry import VelocityComponent, PositionComponent
 from gamelib.ecs.rendering import RectSpriteComponent
+from gamelib.ecs.geometry import PositionBoundsComponent
 
 
 WHITE = (255, 255, 255)
@@ -26,6 +27,9 @@ class Projectile:
     def components(self) -> list[Any]:
         return [
             PositionComponent(0, 0),
+            PositionBoundsComponent(
+                -50, 850, -50, 650, lambda e: esper.delete_entity(e)
+            ),
             RectSpriteComponent(self.screen, self.rect, WHITE),
             VelocityComponent((0, -5)),
             ColliderComponent(

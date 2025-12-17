@@ -2,6 +2,7 @@ from typing import Any
 import esper
 import pygame
 
+from gamelib.ecs.geometry import PositionBoundsComponent
 from gamelib.ecs.geometry import PositionComponent, VelocityComponent
 from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.modifiers.modifier import add_modifier
@@ -29,6 +30,9 @@ class SpeedPowerUp:
     def components(self) -> list[Any]:
         return [
             PositionComponent(0, 0),
+            PositionBoundsComponent(
+                -50, 850, -50, 650, lambda e: esper.delete_entity(e)
+            ),
             RectSpriteComponent(self.screen, self.rect, YELLOW),
             VelocityComponent((0, SPU_SPEED)),
             ColliderComponent(
