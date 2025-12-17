@@ -5,6 +5,7 @@ from typing import Tuple
 import pygame
 import random
 
+from gamelib.ecs.geometry import PositionBoundsProcessor
 from gamelib.ecs.collision import CollisionProcessor
 from gamelib.ecs.custom import CustomUpdateProcessor
 from gamelib.ecs.geometry import MoveProcessor, PositionComponent
@@ -80,6 +81,7 @@ async def main():
     # ECS Setup
     esper.add_processor(PlayerMoveProcessor(), priority=99)
     esper.add_processor(MoveProcessor(), priority=98)
+    esper.add_processor(PositionBoundsProcessor(), priority=97)
     esper.add_processor(CollisionProcessor(), priority=90)
     esper.add_processor(CustomUpdateProcessor(), priority=80)
     esper.add_processor(RenderRectProcessor())
@@ -90,6 +92,12 @@ async def main():
     entity_spawner = EntitySpawner()
 
     player_pos, starfighter_player = spawn_player(player_spawner)
+
+    def add_score(points: int):
+        nonlocal score
+        score += points
+
+    asteroid_spawner.destroyed_asteroid.connect(lambda entity: add_score(1))
 
     while running:
         screen.fill(BLACK)
