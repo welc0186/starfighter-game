@@ -9,7 +9,7 @@ from gamelib.ecs.geometry import (
     PositionComponent,
     PositionBoundsComponent,
 )
-from gamelib.ecs.rendering import RectSpriteComponent
+from gamelib.ecs.rendering import RectSpriteComponent, RenderSurfaceComponent
 
 RED = (255, 0, 0)
 ASTEROID_W = 50
@@ -29,7 +29,9 @@ class AsteroidSpawner:
             self.destroyed_asteroid.emit(entity)
 
     def spawn(
-        self, current_time: int, position: Tuple[int, int], screen: pygame.Surface
+        self,
+        current_time: int,
+        position: Tuple[int, int],
     ) -> None:
         if current_time - self._last_spawn_time < self._spawn_interval:
             return
@@ -38,8 +40,8 @@ class AsteroidSpawner:
         pos_bounds_component = PositionBoundsComponent(
             -50, 850, -50, 650, lambda e: esper.delete_entity(e)
         )
-        rect_sprite_component = RectSpriteComponent(
-            screen, pygame.Rect(position[0], position[1], ASTEROID_W, ASTEROID_H), RED
+        surface_component = RenderSurfaceComponent.solid_rect(
+            ASTEROID_W, ASTEROID_H, RED
         )
         move_linear_component = VelocityComponent((0, 2))
         collider_component = ColliderComponent(
@@ -51,7 +53,7 @@ class AsteroidSpawner:
         esper.create_entity(
             pos_component,
             pos_bounds_component,
-            rect_sprite_component,
+            surface_component,
             move_linear_component,
             collider_component,
         )

@@ -11,7 +11,7 @@ from gamelib.ecs.custom import CustomUpdateProcessor
 from gamelib.ecs.geometry import MoveProcessor, PositionComponent
 from gamelib.ecs.modifiers.modifier import ModifierProcessor
 from gamelib.ecs.player import PlayerMoveProcessor
-from gamelib.ecs.rendering import RenderRectProcessor
+from gamelib.ecs.rendering import RenderRectProcessor, RenderSurfaceProcessor
 import esper
 from starfighter_game.asteroid import AsteroidSpawner
 from starfighter_game.powerup import SpeedPowerUp
@@ -85,6 +85,7 @@ async def main():
     esper.add_processor(CollisionProcessor(), priority=90)
     esper.add_processor(CustomUpdateProcessor(), priority=80)
     esper.add_processor(RenderRectProcessor())
+    esper.add_processor(RenderSurfaceProcessor(screen))
     esper.add_processor(ModifierProcessor())
 
     asteroid_spawner = AsteroidSpawner(1000)
@@ -113,7 +114,7 @@ async def main():
 
         # Spawn asteroids
         x = random.randint(0, WIDTH - enemy_width)
-        asteroid_spawner.spawn(current_time, (x, 0), screen)
+        asteroid_spawner.spawn(current_time, (x, 0))
 
         # Fire a bullet every second
         if current_time - last_bullet_time > 1000:  # 1000 milliseconds = 1 second
