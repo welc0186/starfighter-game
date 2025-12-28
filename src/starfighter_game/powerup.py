@@ -7,7 +7,7 @@ from gamelib.ecs.geometry import PositionComponent, VelocityComponent
 from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.modifiers.modifier import add_modifier
 from gamelib.ecs.modifiers.speed_modifier import SpeedModifier
-from gamelib.ecs.rendering import RectSpriteComponent
+from gamelib.ecs.rendering import RenderSurfaceComponent
 
 SPU_W = 50
 SPU_H = 50
@@ -33,7 +33,7 @@ class SpeedPowerUp:
             PositionBoundsComponent(
                 -50, 850, -50, 650, lambda e: esper.delete_entity(e)
             ),
-            RectSpriteComponent(self.screen, self.rect, YELLOW),
+            RenderSurfaceComponent.from_rect(self.rect, YELLOW),
             VelocityComponent((0, SPU_SPEED)),
             ColliderComponent(
                 SPU_W,

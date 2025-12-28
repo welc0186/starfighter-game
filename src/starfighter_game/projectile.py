@@ -3,7 +3,7 @@ import esper
 import pygame
 from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.geometry import VelocityComponent, PositionComponent
-from gamelib.ecs.rendering import RectSpriteComponent
+from gamelib.ecs.rendering import RenderSurfaceComponent
 from gamelib.ecs.geometry import PositionBoundsComponent
 
 
@@ -30,7 +30,7 @@ class Projectile:
             PositionBoundsComponent(
                 -50, 850, -50, 650, lambda e: esper.delete_entity(e)
             ),
-            RectSpriteComponent(self.screen, self.rect, WHITE),
+            RenderSurfaceComponent.from_rect(self.rect, WHITE),
             VelocityComponent((0, -5)),
             ColliderComponent(
                 PROJ_W,

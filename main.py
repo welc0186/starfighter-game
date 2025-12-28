@@ -84,7 +84,6 @@ async def main():
     esper.add_processor(PositionBoundsProcessor(), priority=97)
     esper.add_processor(CollisionProcessor(), priority=90)
     esper.add_processor(CustomUpdateProcessor(), priority=80)
-    esper.add_processor(RenderRectProcessor())
     esper.add_processor(RenderSurfaceProcessor(screen))
     esper.add_processor(ModifierProcessor())
 

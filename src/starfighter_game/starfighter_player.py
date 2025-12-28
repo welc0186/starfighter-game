@@ -3,7 +3,7 @@ import esper
 import pygame
 from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.geometry import PositionComponent, RectComponent
-from gamelib.ecs.rendering import RectSpriteComponent
+from gamelib.ecs.rendering import RenderSurfaceComponent
 from gamelib.ecs.player import PlayerControllerComponent
 
 P_WIDTH = 50
@@ -34,9 +34,7 @@ class PlayerSpawner:
             width=P_WIDTH,
             height=P_HEIGHT,
         )
-        rect_sprite_component = RectSpriteComponent(
-            screen, pygame.Rect(position[0], position[1], P_WIDTH, P_HEIGHT), WHITE
-        )
+        surface_component = RenderSurfaceComponent.solid_rect(P_WIDTH, P_HEIGHT, WHITE)
         starfighter_player_component = StarfighterPlayerComponent()
         rect_collider_component = ColliderComponent(
             P_WIDTH,
@@ -47,7 +45,7 @@ class PlayerSpawner:
         )
         new_player = esper.create_entity(
             pos_component,
-            rect_sprite_component,
+            surface_component,
             player_component,
             rect_collider_component,
             starfighter_player_component,
