@@ -1,5 +1,22 @@
+# /// script
+# dependencies = [
+#  "esper",
+#  "psygnal",
+#  "pygame",
+# ]
+# ///
+
+
 import asyncio
 import pygame
+
+# pygbag requires importing in main.py
+import esper
+import psygnal
+
+import sys
+
+sys.path.append("./src")
 
 from gamelib.mgmt.scene_base import SceneBase
 from starfighter_game.scenes import GameOverScene, MainScene
