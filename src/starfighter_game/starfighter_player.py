@@ -1,3 +1,4 @@
+from os.path import join
 from typing import Callable, Set, Tuple
 import esper
 import pygame
@@ -9,6 +10,8 @@ from gamelib.ecs.player import PlayerControllerComponent
 P_WIDTH = 50
 P_HEIGHT = 50
 WHITE = (255, 255, 255)
+
+PLAYER_IMAGE = join("assets", "images", "player.png")
 
 
 class StarfighterPlayerComponent:
@@ -35,7 +38,8 @@ class PlayerSpawner:
             width=P_WIDTH,
             height=P_HEIGHT,
         )
-        surface_component = RenderSurfaceComponent.solid_rect(P_WIDTH, P_HEIGHT, WHITE)
+        # surface_component = RenderSurfaceComponent.solid_rect(P_WIDTH, P_HEIGHT, WHITE)
+        surface_component = RenderSurfaceComponent.from_image(PLAYER_IMAGE, True)
         starfighter_player_component = StarfighterPlayerComponent()
         rect_collider_component = ColliderComponent(
             P_WIDTH,

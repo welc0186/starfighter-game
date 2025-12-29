@@ -21,6 +21,8 @@ from starfighter_game.starfighter_player import PlayerSpawner
 ASTEROID_WIDTH = 50
 POWERUP_RADIUS = 20
 
+BACKGROUND_COLOR = (48, 81, 130)
+
 
 class MainScene(SceneBase):
     def __init__(self, screen: pygame.Surface):
@@ -57,7 +59,7 @@ class MainScene(SceneBase):
         self.last_bullet_time = pygame.time.get_ticks()
 
     def update(self, events, pressed_keys, dt: float = 0) -> None:
-        self.screen.fill((0, 0, 0))
+        self.screen.fill(BACKGROUND_COLOR)
         current_time = pygame.time.get_ticks()
 
         # Spawn asteroids
@@ -94,7 +96,7 @@ class GameOverScene(SceneBase):
         self.final_score = final_score
 
     def update(self, events, pressed_keys, dt: float = 0) -> None:
-        self.screen.fill((0, 0, 0))
+        self.screen.fill(BACKGROUND_COLOR)
         font = pygame.font.Font(None, 74)
         text = font.render("Game Over", True, (255, 0, 0))
         self.screen.blit(
