@@ -20,13 +20,14 @@ class PlayerSpawner:
 
     def __init__(self) -> None:
         self.game_over = False
+        self.player_pos = PositionComponent(-100, -100)
 
     def on_player_collided(self, entity: int, other_entity: int, tags: Set[str]):
         if "enemy" in tags:
             self.game_over = True
 
     def spawn(self, position: Tuple[int, int], screen: pygame.Surface) -> int:
-        pos_component = PositionComponent(position[0], position[1])
+        self.player_pos = PositionComponent(position[0], position[1])
         player_component = PlayerControllerComponent(
             base_speed=5,
             refractory_period=300,
@@ -44,7 +45,7 @@ class PlayerSpawner:
             on_collision=self.on_player_collided,
         )
         new_player = esper.create_entity(
-            pos_component,
+            self.player_pos,
             surface_component,
             player_component,
             rect_collider_component,
