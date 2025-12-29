@@ -25,6 +25,12 @@ POWERUP_RADIUS = 20
 class MainScene(SceneBase):
     def __init__(self, screen: pygame.Surface):
         super().__init__(screen)
+        esper.switch_world("default")
+        try:
+            esper.delete_world("main")
+        except KeyError:
+            pass
+        esper.switch_world("main")
         esper.clear_database()
         esper.add_processor(PlayerMoveProcessor(), priority=99)
         esper.add_processor(MoveProcessor(), priority=98)
@@ -103,3 +109,6 @@ class GameOverScene(SceneBase):
             score_text,
             (self.screen.get_width() // 2 - score_text.get_width() // 2, 200),
         )
+
+        if pressed_keys[pygame.K_RETURN]:
+            self.next = MainScene(self.screen)
