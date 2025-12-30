@@ -25,7 +25,11 @@ ASTEROID_WIDTH = 50
 POWERUP_RADIUS = 20
 
 BACKGROUND_COLOR = (48, 81, 130)
+FONT_COLOR = (181, 223, 228)
 BACKDROP_PATH = join("assets", "images", "background.png")
+GAMEOVER_PATH = join("assets", "images", "game_over_screen.png")
+
+FONT_PATH = join("assets", "fonts", "kenney-space.regular.ttf")
 
 SCALE = 4
 WIDTH, HEIGHT = 160, 144
@@ -98,8 +102,8 @@ class MainScene(SceneBase):
         #     self.entity_spawner.spawn((x, 0), SpeedPowerUp(self.screen).components)
 
         # Display score
-        font = pygame.font.Font(None, 36)
-        score_text = font.render(f"Score: {self.score}", True, (255, 255, 255))
+        font = pygame.font.Font(FONT_PATH, 12)
+        score_text = font.render(f"Score: {self.score}", True, FONT_COLOR)
         self.screen.blit(score_text, (10, 10))
 
         esper.process(dt)
@@ -112,22 +116,22 @@ class GameOverScene(SceneBase):
     def __init__(self, screen: pygame.Surface, final_score: int):
         super().__init__(screen)
         self.final_score = final_score
+        self.game_over_screen = pygame.transform.scale(
+            pygame.image.load(GAMEOVER_PATH).convert(),
+            (WIDTH * SCALE, HEIGHT * SCALE),
+        )
 
     def update(self, events, pressed_keys, dt: float = 0) -> None:
-        self.screen.fill(BACKGROUND_COLOR)
-        font = pygame.font.Font(None, 74)
-        text = font.render("Game Over", True, (255, 0, 0))
-        self.screen.blit(
-            text, (self.screen.get_width() // 2 - text.get_width() // 2, 100)
-        )
-
-        font = pygame.font.Font(None, 36)
-        score_text = font.render(
-            f"Final Score: {self.final_score}", True, (255, 255, 255)
-        )
+        self.screen.fill("black")
+        self.screen.blit(self.game_over_screen, (0, 0))
+        font = pygame.font.Font(FONT_PATH, 36)
+        score_text = font.render(f"Final Score: {self.final_score}", True, FONT_COLOR)
         self.screen.blit(
             score_text,
-            (self.screen.get_width() // 2 - score_text.get_width() // 2, 200),
+            (
+                self.screen.get_width() // 2 - score_text.get_width() // 2,
+                0.6 * HEIGHT * SCALE,
+            ),
         )
 
         if pressed_keys[pygame.K_RETURN]:
