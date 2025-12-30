@@ -20,6 +20,7 @@ sys.path.append("./src")
 
 from gamelib.mgmt.scene_base import SceneBase
 from starfighter_game.scenes import GameOverScene, MainScene
+from starfighter_game.sound import init_sound
 
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
@@ -28,6 +29,8 @@ WIDTH, HEIGHT = 800, 600
 async def run_game(fps: int, starting_scene: SceneBase):
     pygame.init()
     clock = pygame.time.Clock()
+
+    init_sound()
 
     active_scene = starting_scene
 

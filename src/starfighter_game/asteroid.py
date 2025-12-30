@@ -1,7 +1,10 @@
+from os.path import join
 from typing import Tuple
 from psygnal import Signal
 import pygame
 import esper
+
+from starfighter_game.game_events import ON_ASTEROID_DESTROYED
 
 from gamelib.ecs.collision import ColliderComponent
 from gamelib.ecs.geometry import (
@@ -15,6 +18,8 @@ RED = (255, 0, 0)
 ASTEROID_W = 50
 ASTEROID_H = 50
 
+EXPLOSION_PATH = join("assets", "sounds", "small_explosion.wav")
+
 
 class AsteroidSpawner:
     destroyed_asteroid = Signal(int)
@@ -22,11 +27,16 @@ class AsteroidSpawner:
     def __init__(self, spawn_interval: int):
         self._spawn_interval = spawn_interval
         self._last_spawn_time = 0
+        # if not pygame.mixer.get_init():
+        #     pygame.mixer.init()
+        # self._sound = pygame.mixer.Sound(EXPLOSION_PATH)
 
     def on_asteroid_collided(self, entity, other_entity, tags):
         if "projectile" in tags:
             esper.delete_entity(entity)
             self.destroyed_asteroid.emit(entity)
+            ON_ASTEROID_DESTROYED.trigger(entity)
+            # self._sound.play()
 
     def spawn(
         self,
