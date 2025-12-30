@@ -16,6 +16,7 @@ from gamelib.ecs import (
 import pygame
 
 from starfighter_game.asteroid import AsteroidSpawner
+from starfighter_game.game_events import ON_PROJECTILE_LAUNCHED
 from starfighter_game.powerup import SpeedPowerUp
 from starfighter_game.projectile import EntitySpawner, Projectile
 from starfighter_game.starfighter_player import PlayerSpawner
@@ -81,10 +82,11 @@ class MainScene(SceneBase):
 
         # Fire a bullet every second
         if current_time - self.last_bullet_time > 1000:  # 1000 milliseconds = 1 second
-            pojectile = self.entity_spawner.spawn(
+            self.entity_spawner.spawn(
                 (self.player_spawner.player_pos.x, self.player_spawner.player_pos.y),
                 Projectile(self.screen).components,
             )
+            ON_PROJECTILE_LAUNCHED.trigger()
             self.last_bullet_time = current_time
 
         # Spawn a power-up randomly
