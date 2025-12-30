@@ -7,8 +7,9 @@ from gamelib.ecs.geometry import PositionComponent, RectComponent
 from gamelib.ecs.rendering import RenderSurfaceComponent
 from gamelib.ecs.player import PlayerControllerComponent
 
-P_WIDTH = 50
-P_HEIGHT = 50
+SCALE = 4
+P_WIDTH = 16 * SCALE
+P_HEIGHT = 16 * SCALE
 WHITE = (255, 255, 255)
 
 PLAYER_IMAGE = join("assets", "images", "player.png")
@@ -39,7 +40,9 @@ class PlayerSpawner:
             height=P_HEIGHT,
         )
         # surface_component = RenderSurfaceComponent.solid_rect(P_WIDTH, P_HEIGHT, WHITE)
-        surface_component = RenderSurfaceComponent.from_image(PLAYER_IMAGE, True)
+        surface_component = RenderSurfaceComponent.from_image(PLAYER_IMAGE, True).scale(
+            SCALE
+        )
         starfighter_player_component = StarfighterPlayerComponent()
         rect_collider_component = ColliderComponent(
             P_WIDTH,

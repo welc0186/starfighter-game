@@ -23,7 +23,8 @@ from starfighter_game.scenes import GameOverScene, MainScene
 from starfighter_game.sound import init_sound
 
 # Screen dimensions
-WIDTH, HEIGHT = 800, 600
+SCALE = 4
+WIDTH, HEIGHT = 160, 144
 
 
 async def run_game(fps: int, starting_scene: SceneBase):
@@ -65,6 +66,6 @@ async def run_game(fps: int, starting_scene: SceneBase):
         await asyncio.sleep(0)
 
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH * SCALE, HEIGHT * SCALE))
 pygame.display.set_caption("Starfighter")
 asyncio.run(run_game(60, MainScene(screen)))

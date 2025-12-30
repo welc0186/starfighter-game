@@ -1,3 +1,4 @@
+from os.path import join
 import random
 import esper
 from gamelib.mgmt.scene_base import SceneBase
@@ -22,6 +23,10 @@ ASTEROID_WIDTH = 50
 POWERUP_RADIUS = 20
 
 BACKGROUND_COLOR = (48, 81, 130)
+BACKDROP_PATH = join("assets", "images", "background.png")
+
+SCALE = 4
+WIDTH, HEIGHT = 160, 144
 
 
 class MainScene(SceneBase):
@@ -46,6 +51,11 @@ class MainScene(SceneBase):
         self.player_spawner = PlayerSpawner()
         self.entity_spawner = EntitySpawner()
 
+        self.backdrop = pygame.transform.scale(
+            pygame.image.load(BACKDROP_PATH).convert(),
+            (WIDTH * SCALE, HEIGHT * SCALE),
+        )
+
         self.player_spawner.spawn(
             (screen.get_width() // 2, screen.get_height() - 60), screen
         )
@@ -60,6 +70,7 @@ class MainScene(SceneBase):
 
     def update(self, events, pressed_keys, dt: float = 0) -> None:
         self.screen.fill(BACKGROUND_COLOR)
+        self.screen.blit(self.backdrop, (0, 0))
         current_time = pygame.time.get_ticks()
 
         # Spawn asteroids
@@ -75,9 +86,9 @@ class MainScene(SceneBase):
             self.last_bullet_time = current_time
 
         # Spawn a power-up randomly
-        if random.randint(1, 200) == 1:
-            x = random.randint(POWERUP_RADIUS, self.screen.get_width() - POWERUP_RADIUS)
-            self.entity_spawner.spawn((x, 0), SpeedPowerUp(self.screen).components)
+        # if random.randint(1, 200) == 1:
+        #     x = random.randint(POWERUP_RADIUS, self.screen.get_width() - POWERUP_RADIUS)
+        #     self.entity_spawner.spawn((x, 0), SpeedPowerUp(self.screen).components)
 
         # Display score
         font = pygame.font.Font(None, 36)

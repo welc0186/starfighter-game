@@ -15,10 +15,12 @@ from gamelib.ecs.geometry import (
 from gamelib.ecs.rendering import RectSpriteComponent, RenderSurfaceComponent
 
 RED = (255, 0, 0)
-ASTEROID_W = 50
-ASTEROID_H = 50
+SCALE = 4
+ASTEROID_W = 16 * SCALE
+ASTEROID_H = 16 * SCALE
 
 EXPLOSION_PATH = join("assets", "sounds", "small_explosion.wav")
+SPRITE_PATH = join("assets", "images", "asteroid.png")
 
 
 class AsteroidSpawner:
@@ -50,8 +52,8 @@ class AsteroidSpawner:
         pos_bounds_component = PositionBoundsComponent(
             -50, 850, -50, 650, lambda e: esper.delete_entity(e)
         )
-        surface_component = RenderSurfaceComponent.solid_rect(
-            ASTEROID_W, ASTEROID_H, RED
+        surface_component = RenderSurfaceComponent.from_image(SPRITE_PATH, True).scale(
+            SCALE
         )
         move_linear_component = VelocityComponent((0, 2))
         collider_component = ColliderComponent(
