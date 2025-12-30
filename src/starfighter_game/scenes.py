@@ -11,6 +11,7 @@ from gamelib.ecs import (
     RenderSurfaceProcessor,
     ModifierProcessor,
     PlayerMoveProcessor,
+    TimerProcessor,
 )
 import pygame
 
@@ -44,6 +45,7 @@ class MainScene(SceneBase):
         esper.add_processor(PositionBoundsProcessor(), priority=97)
         esper.add_processor(CollisionProcessor(), priority=90)
         esper.add_processor(CustomUpdateProcessor(), priority=80)
+        esper.add_processor(TimerProcessor(), priority=70)
         esper.add_processor(RenderSurfaceProcessor(screen))
         esper.add_processor(ModifierProcessor())
 

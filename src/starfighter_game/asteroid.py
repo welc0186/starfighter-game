@@ -6,13 +6,14 @@ import esper
 
 from starfighter_game.game_events import ON_ASTEROID_DESTROYED
 
-from gamelib.ecs.collision import ColliderComponent
-from gamelib.ecs.geometry import (
+from gamelib.ecs import (
+    ColliderComponent,
     VelocityComponent,
     PositionComponent,
     PositionBoundsComponent,
+    RenderSurfaceComponent,
+    TimerComponent,
 )
-from gamelib.ecs.rendering import RectSpriteComponent, RenderSurfaceComponent
 
 RED = (255, 0, 0)
 SCALE = 4
@@ -21,6 +22,7 @@ ASTEROID_H = 16 * SCALE
 
 EXPLOSION_PATH = join("assets", "sounds", "small_explosion.wav")
 SPRITE_PATH = join("assets", "images", "asteroid.png")
+DESTROYED_SPRITE_PATH = join("assets", "images", "asteroid_destroyed.png")
 
 
 class AsteroidSpawner:
@@ -33,11 +35,28 @@ class AsteroidSpawner:
         #     pygame.mixer.init()
         # self._sound = pygame.mixer.Sound(EXPLOSION_PATH)
 
+    def spawn_destroyed_asteroid(self, position: Tuple[int, int]):
+        # Play explosion sound
+        # self._sound.play()
+        entity = esper.create_entity(
+            PositionComponent(position[0], position[1]),
+            RenderSurfaceComponent.from_image(DESTROYED_SPRITE_PATH, True).scale(SCALE),
+        )
+
+        def destroy_entity(entity):
+            if esper.has_component(entity, RenderSurfaceComponent):
+                esper.delete_entity(entity)
+
+        esper.add_component(entity, TimerComponent(0.2, lambda: destroy_entity(entity)))
+
     def on_asteroid_collided(self, entity, other_entity, tags):
         if "projectile" in tags:
+            pos_comp = esper.component_for_entity(entity, PositionComponent)
+            pos = pos_comp.x, pos_comp.y
             esper.delete_entity(entity)
             self.destroyed_asteroid.emit(entity)
             ON_ASTEROID_DESTROYED.trigger(entity)
+            self.spawn_destroyed_asteroid(pos)
             # self._sound.play()
 
     def spawn(
