@@ -59,7 +59,7 @@ class MainScene(SceneBase):
         )
 
         self.player_spawner.spawn(
-            (screen.get_width() // 2, screen.get_height() - 60), screen
+            (screen.get_width() // 2, screen.get_height() - 24 * SCALE), screen
         )
 
         self.score = 0
