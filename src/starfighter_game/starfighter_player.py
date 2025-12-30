@@ -15,11 +15,6 @@ WHITE = (255, 255, 255)
 PLAYER_IMAGE = join("assets", "images", "player.png")
 
 
-class StarfighterPlayerComponent:
-    def __init__(self) -> None:
-        self.game_over = False
-
-
 class PlayerSpawner:
 
     def __init__(self) -> None:
@@ -39,11 +34,9 @@ class PlayerSpawner:
             width=P_WIDTH,
             height=P_HEIGHT,
         )
-        # surface_component = RenderSurfaceComponent.solid_rect(P_WIDTH, P_HEIGHT, WHITE)
         surface_component = RenderSurfaceComponent.from_image(PLAYER_IMAGE, True).scale(
             SCALE
         )
-        starfighter_player_component = StarfighterPlayerComponent()
         rect_collider_component = ColliderComponent(
             P_WIDTH,
             P_HEIGHT,
@@ -56,6 +49,5 @@ class PlayerSpawner:
             surface_component,
             player_component,
             rect_collider_component,
-            starfighter_player_component,
         )
         return new_player

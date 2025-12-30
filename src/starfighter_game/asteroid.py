@@ -31,13 +31,8 @@ class AsteroidSpawner:
     def __init__(self, spawn_interval: int):
         self._spawn_interval = spawn_interval
         self._last_spawn_time = 0
-        # if not pygame.mixer.get_init():
-        #     pygame.mixer.init()
-        # self._sound = pygame.mixer.Sound(EXPLOSION_PATH)
 
     def spawn_destroyed_asteroid(self, position: Tuple[int, int]):
-        # Play explosion sound
-        # self._sound.play()
         entity = esper.create_entity(
             PositionComponent(position[0], position[1]),
             RenderSurfaceComponent.from_image(DESTROYED_SPRITE_PATH, True).scale(SCALE),
@@ -50,7 +45,7 @@ class AsteroidSpawner:
         esper.add_component(entity, TimerComponent(0.2, lambda: destroy_entity(entity)))
 
     def on_asteroid_collided(self, entity, other_entity, tags):
-        if "projectile" in tags:
+        if "projectile" in tags or "player" in tags:
             pos_comp = esper.component_for_entity(entity, PositionComponent)
             pos = pos_comp.x, pos_comp.y
             esper.delete_entity(entity)
