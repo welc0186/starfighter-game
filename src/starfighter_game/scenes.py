@@ -83,7 +83,10 @@ class MainScene(SceneBase):
         # Fire a bullet every second
         if current_time - self.last_bullet_time > 1000:  # 1000 milliseconds = 1 second
             self.entity_spawner.spawn(
-                (self.player_spawner.player_pos.x, self.player_spawner.player_pos.y),
+                (
+                    self.player_spawner.player_pos.x + 32,
+                    self.player_spawner.player_pos.y,
+                ),
                 Projectile(self.screen).components,
             )
             ON_PROJECTILE_LAUNCHED.trigger()

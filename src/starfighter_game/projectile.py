@@ -7,10 +7,10 @@ from gamelib.ecs.rendering import RenderSurfaceComponent
 from gamelib.ecs.geometry import PositionBoundsComponent
 
 
-WHITE = (255, 255, 255)
+PROJ_COLOR = (181, 223, 228)
 PROJ_V = 5
-PROJ_W = 10
-PROJ_H = 10
+PROJ_W = 8
+PROJ_H = 8
 
 
 def on_projectile_collided(entity, other_entity, tags):
@@ -30,7 +30,7 @@ class Projectile:
             PositionBoundsComponent(
                 -50, 850, -50, 650, lambda e: esper.delete_entity(e)
             ),
-            RenderSurfaceComponent.from_rect(self.rect, WHITE),
+            RenderSurfaceComponent.from_rect(self.rect, PROJ_COLOR),
             VelocityComponent((0, -5)),
             ColliderComponent(
                 PROJ_W,
