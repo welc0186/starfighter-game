@@ -67,5 +67,5 @@ async def run_game(fps: int, starting_scene: SceneBase):
 
 
 screen = pygame.display.set_mode((WIDTH * SCALE, HEIGHT * SCALE))
-pygame.display.set_caption("Starfighter")
+pygame.display.set_caption("PyFighter")
 asyncio.run(run_game(60, MainScene(screen)))

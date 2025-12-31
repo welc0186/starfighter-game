@@ -17,7 +17,6 @@ pygame = "^2.6.1"
 pygbag = "^0.9.2"
 esper = "^3.4"
 psygnal = "^0.15.0"
-gamelib = {path = "../gamelib", develop = true}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

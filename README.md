@@ -17,5 +17,6 @@ To install the required dependencies, you can use [Poetry](https://python-poetry
 Once you have Poetry installed, navigate to the project directory and run:
 
 ```
+poetry install
 poetry run python main.py
 ```
