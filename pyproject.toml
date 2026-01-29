@@ -17,6 +17,7 @@ pygame = "^2.6.1"
 pygbag = "^0.9.2"
 esper = "^3.4"
 psygnal = "^0.15.0"
+gamelib = {git = "https://github.com/welc0186/pygamelib.git", rev = "v0.1.0"}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

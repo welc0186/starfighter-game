@@ -1,0 +1,5 @@
+esper==3.4 ; python_version >= "3.13" and python_version < "4.0"
+gamelib @ git+https://github.com/welc0186/pygamelib.git@c6a198ed6294bfe7b9f3e11215c98ede6a4281d5 ; python_version >= "3.13" and python_version < "4.0"
+psygnal==0.15.0 ; python_version >= "3.13" and python_version < "4.0"
+pygame==2.6.1 ; python_version >= "3.13" and python_version < "4.0"
+pygbag==0.9.2 ; python_version >= "3.13" and python_version < "4.0"

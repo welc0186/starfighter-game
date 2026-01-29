@@ -13,6 +13,26 @@ files = [
 ]
 
 [[package]]
+name = "gamelib"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = []
+develop = false
+
+[package.dependencies]
+esper = ">=3.4,<4.0"
+pygame = ">=2.6.1,<3.0.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/welc0186/pygamelib.git"
+reference = "v0.1.0"
+resolved_reference = "c6a198ed6294bfe7b9f3e11215c98ede6a4281d5"
+
+[[package]]
 name = "psygnal"
 version = "0.15.0"
 description = "Fast python callback/event system modeled after Qt Signals"
@@ -141,4 +161,4 @@ sim = ["aioconsole", "aiohttp", "asyncio-socks-server"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "5d0fede9588088524875f3e957d6e0213d8dfdf1b09024c2001c014d4f35b634"
+content-hash = "f09a21f0022d0002a03d6b56edbda2679c8ff9289992f1e1ba25bb36700260c0"
